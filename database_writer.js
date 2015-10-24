@@ -23,7 +23,7 @@ var Item = sequelize.define('Item', {
 parser('база картинок dump.xlsx', handleXlsxData);
 
 function handleXlsxData(error, data) {
-    if(error) throw error
+    if(error) throw error;
     for(var i=0;i<data.length;i++) {
         saveItem(data[i]);
     }

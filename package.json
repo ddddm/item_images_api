@@ -9,8 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.14.1",
     "excel": "^0.1.4",
     "express": "^4.13.3",
+    "qs": "^5.2.0",
     "sequelize": "^3.12.2",
     "sqlite3": "^3.1.0"
   }
