@@ -8,7 +8,7 @@ var _ = require('lodash');
 //var Sequelize = require("sequelize");
 //var config    = require('./config.json');
 //var sequelize = new Sequelize(config.database, config.username, config.password, config);
-var Item = require('./models/item');
+var models = require('./models');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -27,7 +27,7 @@ router.route('/items')
         var params = {
             limit : 10
         };
-        Item.findAll(params)
+        models['Item'].findAll(params)
             .then(sendResults);
 
         function sendResults(results) {
@@ -38,7 +38,7 @@ router.route('/items')
 
 router.route('/items/:item_id')
     .get(function (req, res) {
-        Item.findById(req.params.item_id)
+        models['Item'].findById(req.params.item_id)
             .then(sendResults);
 
         function sendResults(results) {

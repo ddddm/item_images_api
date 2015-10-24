@@ -1,20 +1,31 @@
 'use strict';
 
-var Sequelize = require("sequelize");
-var config    = require('../config.json');
-var sequelize = new Sequelize(config.database, config.username, config.password, config);
+module.exports = function(sequelize, DataTypes) {
+    var Item = sequelize.define("Item", {
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        code: DataTypes.INTEGER,
+        name: DataTypes.STRING,
+        image_file: DataTypes.STRING,
+        description: DataTypes.TEXT
+    }, {
+        //classMethods: {
+        //    associate: function(models) {
+        //        Task.belongsTo(models.User, {
+        //            onDelete: "CASCADE",
+        //            foreignKey: {
+        //                allowNull: false
+        //            }
+        //        });
+        //    }
+        //},
+        timestamps: false,
+        tableName: 'item'
 
-module.exports = sequelize.define('Item', {
-    id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-    },
-    code: Sequelize.INTEGER,
-    name: Sequelize.STRING,
-    image_file: Sequelize.STRING,
-    description: Sequelize.TEXT
-},{
-    timestamps: false,
-    tableName: 'item'
-});
+    });
+
+    return Item;
+};
