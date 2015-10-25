@@ -5,9 +5,6 @@ var bodyParser = require('body-parser');
 var Qs = require('qs');
 var _ = require('lodash');
 
-//var Sequelize = require("sequelize");
-//var config    = require('./config.json');
-//var sequelize = new Sequelize(config.database, config.username, config.password, config);
 var models = require('./models');
 
 // configure app to use bodyParser()
@@ -55,5 +52,8 @@ app.use('/api', router);
 
 // START THE SERVER
 // =============================================================================
-app.listen(port);
-console.log('Magic happens on port ' + port);
+models.sequelize.sync()
+    .then(function () {
+        var server = app.listen(port);
+        console.log('Magic happens on ' + server.address().address + port);
+    });
