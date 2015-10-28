@@ -4,6 +4,7 @@ var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 var Qs = require('qs');
 var _ = require('lodash');
+var Promise = require('bluebird');
 
 var models = require('./models');
 
@@ -43,6 +44,43 @@ router.route('/items/:item_id')
         }
     });
 
+router.route('/changes')
+    .post(function (req, res) {
+        var items = [49822, 49821];
+        models['Change']
+            .create()
+            .then(function (change) {
+                Promise.all(
+                    _.map(items, function (item) {
+                    return models['Item'].findAll({
+                        where: {code: item}
+                    })
+                        .then(function (item) {
+                             return change.addItem(item);
+                        })
+                })
+                )
+            })
+            .then(function (smth) {
+                res.ok(smth)
+            })
+
+    })
+    .get(function (req, res) {
+        var params = {
+            limit : 10,
+            include: [{
+                model: models['Item']
+            }]
+        };
+        models['Change'].findAll(params)
+            .then(sendResults);
+
+        function sendResults(results) {
+            res.json(results);
+        }
+
+    });
 
 // more routes for our API will happen here
 

@@ -1,18 +1,13 @@
 module.exports = function (sequelize, DataTypes) {
     var Change = sequelize.define("Change", {
     }, {
-        //classMethods: {
-        //    associate: function(models) {
-        //        Task.belongsTo(models.User, {
-        //            onDelete: "CASCADE",
-        //            foreignKey: {
-        //                allowNull: false
-        //            }
-        //        });
-        //    }
-        //},
-        //timestamps: false,
-        //tableName: 'item'
+        classMethods: {
+            associate: function(models) {
+                Change.belongsToMany(models['Item'], {through: 'ItemChange'});
+            }
+        },
+        timestamps: true,
+        tableName: 'change'
 
     });
 

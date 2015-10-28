@@ -12,16 +12,11 @@ module.exports = function(sequelize, DataTypes) {
         image_file: DataTypes.STRING,
         description: DataTypes.TEXT
     }, {
-        //classMethods: {
-        //    associate: function(models) {
-        //        Task.belongsTo(models.User, {
-        //            onDelete: "CASCADE",
-        //            foreignKey: {
-        //                allowNull: false
-        //            }
-        //        });
-        //    }
-        //},
+        classMethods: {
+            associate: function(models) {
+                Item.belongsToMany(models['Change'], {through: 'ItemChange'});
+            }
+        },
         timestamps: false,
         tableName: 'item'
 
