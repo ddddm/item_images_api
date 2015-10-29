@@ -5,6 +5,9 @@ var bodyParser = require('body-parser');
 var Qs = require('qs');
 var _ = require('lodash');
 var Promise = require('bluebird');
+var parser = require('excel');
+var multer  = require('multer')
+var upload = multer({ dest: './uploads/'});
 
 var models = require('./models');
 
@@ -12,6 +15,7 @@ var models = require('./models');
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+//app.use(multer({ dest: './uploads/'}));
 
 var port = process.env.PORT || 8080;        // set our port
 
@@ -45,25 +49,30 @@ router.route('/items/:item_id')
     });
 
 router.route('/changes')
-    .post(function (req, res) {
-        var items = [49822, 49821];
-        models['Change']
-            .create()
-            .then(function (change) {
-                Promise.all(
-                    _.map(items, function (item) {
-                    return models['Item'].findAll({
-                        where: {code: item}
-                    })
-                        .then(function (item) {
-                             return change.addItem(item);
-                        })
-                })
-                )
+    .post(upload.single('xlsx'), function (req, res) {
+
+        var parserAsync = Promise.promisify(parser);
+        parserAsync(req.file.path)
+            .then(function (result) {
+                res.json(result);
             })
-            .then(function (smth) {
-                res.ok(smth)
-            })
+        //models['Change']
+        //    .create()
+        //    .then(function (change) {
+        //        Promise.all(
+        //            _.map(items, function (item) {
+        //            return models['Item'].findAll({
+        //                where: {code: item}
+        //            })
+        //                .then(function (item) {
+        //                     return change.addItem(item);
+        //                })
+        //        })
+        //        )
+        //    })
+        //    .then(function (smth) {
+        //        res.ok(smth)
+        //    })
 
     })
     .get(function (req, res) {
