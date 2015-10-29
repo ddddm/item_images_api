@@ -4,5 +4,4 @@
 # packages
 node_modules/
 
-database/*
 config.json
