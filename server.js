@@ -6,7 +6,7 @@ var Qs = require('qs');
 var _ = require('lodash');
 var Promise = require('bluebird');
 var parser = require('excel');
-var multer  = require('multer')
+var multer  = require('multer');
 var upload = multer({ dest: './uploads/'});
 
 var models = require('./models');
@@ -50,30 +50,68 @@ router.route('/items/:item_id')
 
 router.route('/changes')
     .post(upload.single('xlsx'), function (req, res) {
+        var fileResults;
+        var parseAsync = Promise.promisify(parser);
 
-        var parserAsync = Promise.promisify(parser);
-        parserAsync(req.file.path)
-            .then(function (result) {
-                res.json(result);
+        parseAsync(req.file.path)
+            .then(function (parsedTable) {
+                return _.map(parsedTable, function (item) {
+                    return {
+                        code: item[0],
+                        name: item[1]
+                    }
+                });
             })
-        //models['Change']
-        //    .create()
-        //    .then(function (change) {
-        //        Promise.all(
-        //            _.map(items, function (item) {
-        //            return models['Item'].findAll({
-        //                where: {code: item}
-        //            })
-        //                .then(function (item) {
-        //                     return change.addItem(item);
-        //                })
-        //        })
-        //        )
-        //    })
-        //    .then(function (smth) {
-        //        res.ok(smth)
-        //    })
+            .then(function (items) {
+                //deal with each item synchronously
+                return Promise.reduce(
+                    items,
+                    function (total, item) {
+                        return models['Item']
+                            .findOrCreate({
+                                where: {
+                                    code: item.code
+                                },
+                                defaults: {
+                                    name: item.name
+                                }
 
+                            })
+                            .spread(function (item, created) {
+                                return _.union(total, [{
+                                    isCreated: created,
+                                    item: item
+                                }])
+                            })
+
+                    },
+                    []
+                )
+            })
+            .then(function (items) {
+                res.json(items);
+            })
+                // TODO: create Change, add items
+
+
+                //Promise.all(
+                //    _.map(items, function (item) {
+                //        return item.
+                //        return models['Item'].findAll({
+                //            where: {code: item[0]}
+                //        })
+                        //.then(function (item) {
+                        //     return change.addItem(item);
+                        //})
+            //        })
+            //    )
+            //        .then(function (result) {
+            //            res.json(result);
+            //        })
+            //})
+            .catch(function (err) {
+                console.log("Error: ", err);
+            })
     })
     .get(function (req, res) {
         var params = {
