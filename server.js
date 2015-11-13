@@ -50,7 +50,6 @@ router.route('/items/:item_id')
 
 router.route('/changes')
     .post(upload.single('xlsx'), function (req, res) {
-        var fileResults;
         var parseAsync = Promise.promisify(parser);
 
         parseAsync(req.file.path)
@@ -89,26 +88,15 @@ router.route('/changes')
                 )
             })
             .then(function (items) {
-                res.json(items);
+                return models['Change']
+                    .create()
+                    .then(function (change) {
+                        return change.setItems(_.map(items, function(item){return item.item}));
+                    })
             })
-                // TODO: create Change, add items
-
-
-                //Promise.all(
-                //    _.map(items, function (item) {
-                //        return item.
-                //        return models['Item'].findAll({
-                //            where: {code: item[0]}
-                //        })
-                        //.then(function (item) {
-                        //     return change.addItem(item);
-                        //})
-            //        })
-            //    )
-            //        .then(function (result) {
-            //            res.json(result);
-            //        })
-            //})
+            .then(function (change) {
+                res.json(change);
+            })
             .catch(function (err) {
                 console.log("Error: ", err);
             })
