@@ -1,12 +1,14 @@
 // call the packages we need
 var express    = require('express');        // call express
 var app        = express();                 // define our app using express
+var fs        = require("fs");
 var bodyParser = require('body-parser');
 var Qs = require('qs');
 var _ = require('lodash');
 var Promise = require('bluebird');
 var parser = require('excel');
 var multer  = require('multer');
+var JSZip = require("jszip");
 var upload = multer({ dest: './uploads/'});
 
 var models = require('./models');
@@ -15,15 +17,27 @@ var models = require('./models');
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-//app.use(multer({ dest: './uploads/'}));
 
 var port = process.env.PORT || 8080;        // set our port
+
+var changeUploadFileFields = [
+    {
+        name: 'xlsx'
+    },
+    {
+        name: 'zip'
+    }
+    ];
+
+// promisification
+var readFileAsync = Promise.promisify(fs.readFile);
+var parseAsync = Promise.promisify(parser);
+
 
 // ROUTES FOR OUR API
 // =============================================================================
 var router = express.Router();              // get an instance of the express Router
 
-// test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.route('/items')
     .get(function(req, res) {
         var params = {
@@ -49,57 +63,67 @@ router.route('/items/:item_id')
     });
 
 router.route('/changes')
-    .post(upload.single('xlsx'), function (req, res) {
-        var parseAsync = Promise.promisify(parser);
+    .post(upload.fields(changeUploadFileFields), function (req, res) {
 
-        parseAsync(req.file.path)
-            .then(function (parsedTable) {
-                return _.map(parsedTable, function (item) {
-                    return {
-                        code: item[0],
-                        name: item[1]
-                    }
-                });
-            })
-            .then(function (items) {
-                //deal with each item synchronously
-                return Promise.reduce(
-                    items,
-                    function (total, item) {
-                        return models['Item']
-                            .findOrCreate({
-                                where: {
-                                    code: item.code
-                                },
-                                defaults: {
-                                    name: item.name
-                                }
-
-                            })
-                            .spread(function (item, created) {
-                                return _.union(total, [{
-                                    isCreated: created,
-                                    item: item
-                                }])
-                            })
-
-                    },
-                    []
-                )
-            })
-            .then(function (items) {
-                return models['Change']
-                    .create()
-                    .then(function (change) {
-                        return change.setItems(_.map(items, function(item){return item.item}));
-                    })
-            })
-            .then(function (change) {
-                res.json(change);
+        Promise.all(
+            createChangeFromExcelFile(),
+            saveImagesFromArchive()
+        )
+            .then(function(array) {
+                res.json(array);
             })
             .catch(function (err) {
-                console.log("Error: ", err);
-            })
+                res.json(err);
+                throw err;
+            });
+
+        function createChangeFromExcelFile() {
+            return parseAsync(req.files.xlsx[0].path)
+                .then(function (parsedTable) {
+                    return _.map(parsedTable, function (item) {
+                        return {
+                            code: item[0],
+                            name: item[1]
+                        }
+                    });
+                })
+                .then(function (items) {
+                    //deal with each item synchronously
+                    return models['Item'].createFromList(items);
+                })
+                .then(function (items) {
+                    return models['Change']
+                        .create()
+                        .then(function (change) {
+                            return change.setItems(_.map(items, function (item) {
+                                return item.item
+                            }));
+                        })
+                });
+        }
+        function saveImagesFromArchive() {
+            return readFileAsync(req.files.zip[0].path)
+                .then(function (fileData) {
+                    var zip = new JSZip(fileData);
+                    return Promise.all(_.map(zip.files, function (file) {
+                        return saveFileToDisk(file);
+                    }))
+                });
+
+            function saveFileToDisk(file) {
+                return new Promise(function(resolve, reject) {
+                    if(!file.dir) {
+                        var fileName = file.name.split('/');
+                        fileName = fileName[fileName.length-1];
+                        fs.writeFile("images/" + fileName, file.asNodeBuffer(), function(err) {
+                            if (err) reject(err);
+                            resolve(file);
+                        });
+                    }
+                })
+
+            }
+        }
     })
     .get(function (req, res) {
         var params = {
