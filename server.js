@@ -95,7 +95,6 @@ router.route('/changes')
                   filteredItems = []
               _.each(change, function(item) {
                 if(item.file) {
-                  console.log('counter. Bazzinga!');
                     filteredItems.push(item);
                     filePromises.push(
                       archiveFileService.saveFile(item.file)
