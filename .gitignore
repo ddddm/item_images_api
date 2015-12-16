@@ -1,10 +1,13 @@
-# IDE stuff
+# IDE, OS stuff
 .idea/
+.DS_Store
+Thumbs.db
 
 # packages
 node_modules/
 
 database/
 uploads/
+cache/
 images/
 config.json
