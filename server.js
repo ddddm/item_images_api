@@ -1,11 +1,11 @@
-// call the packages we need
-var express    = require('express');        // call express
-var app        = express();                 // define our app using express
-var fs        = require("fs");
+var Promise = require('bluebird');
+var express    = require('express');
+var app        = express();
+var fs = Promise.promisifyAll(require("fs"));
 var bodyParser = require('body-parser');
 var Qs = require('qs');
 var _ = require('lodash');
-var Promise = require('bluebird');
+
 var multer  = require('multer');
 var JSZip = require("jszip");
 var upload = multer({ dest: './uploads/'});
@@ -24,11 +24,6 @@ var port = process.env.PORT || 8090;        // set our port
 var changeUploadFileFields = [
     { name: 'xlsx' },
     { name: 'zip'  }];
-
-// promisification
-var readFileAsync = Promise.promisify(fs.readFile);
-var reddirPromised = Promise.promisify(fs.readdir);
-
 
 // router
 // item
@@ -67,7 +62,11 @@ router.route('/items/:item_id')
 
 router.route('/changes')
     .post(upload.fields(changeUploadFileFields), function (req, res) {
-        var stats = {};
+        var stats = {
+          unusedItems: {
+            items: []
+          }
+        };
 
         Promise.all([
           excelService.parse(req.files.xlsx[0].path),
@@ -76,17 +75,17 @@ router.route('/changes')
             .spread(function(items, files) {
               // construct single array of items
               // which has corresponding files
-
-                var change = _.map(items, function (item) {
-                  var constructedItem = excelService.createItemObject(item);
-                  var file = _.find(files, function(file) {
-                    return archiveFileService.codeFromFilename(file.name) == constructedItem.code
-                  })
-                  // file === undefiend - if we have no file
-                  constructedItem.file = file;
-                  return constructedItem;
+              var change = _.map(items, function (item) {
+                var constructedItem = excelService.createItemObject(item);
+                var file = _.find(files, function(file) {
+                  return file.name === item.image_file ||
+                         archiveFileService.codeFromFilename(file.name) == constructedItem.code
                 })
-                return change;
+                // file === undefiend - if we have no file
+                constructedItem.file = file;
+                return constructedItem;
+              })
+              return change;
             })
             .then(function(change) {
               // save images to disk
@@ -99,7 +98,10 @@ router.route('/changes')
                     filePromises.push(
                       archiveFileService.saveFile(item.file)
                     )
+                } else {
+                  stats.unusedItems.items.push(item)
                 }
+
               })
               console.log("Preparing the launch, capitan.");
               console.log("We got " + filteredItems.length + " filtered items, " + filePromises.length + " file promises.");
@@ -111,14 +113,18 @@ router.route('/changes')
 
             })
             .spread(function(change) {
-              // TODO: gather stats about unused images and
-              // TODO: items without image
+              // TODO: gather stats about unused images
               _.each(change, function(item) {
                 if(item.file) {
                   item.file = { name: item.file.name }
                 }
               })
-              return res.json(change);
+              // stats
+              stats.unusedItems.results = stats.unusedItems.length;
+              return res.json({
+                change: change,
+                stats: stats
+              });
             })
             .catch(function (err) {
                 res.json(err);
