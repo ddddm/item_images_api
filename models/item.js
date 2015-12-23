@@ -28,7 +28,9 @@ module.exports = function(sequelize, DataTypes) {
                                     code: item.code
                                 },
                                 defaults: {
-                                    name: item.name
+                                    name: item.name,
+                                    description: item.description,
+                                    image_file: item.image_file
                                 }
 
                             })
