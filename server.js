@@ -148,56 +148,33 @@ router.route('/changes')
     });
 router.route('/changes/:change_id')
     .get(function (req, res) {
-      var productCodes = [];
-        models['Change'].findById(req.params.change_id, {
-            include: [{
-                model: models['Item']
-            }]
+      var _change;
+      models['Change'].findById(req.params.change_id, {
+          include: [{
+              model: models['Item']
+          }]
+      })
+        .then(function(change) {
+          _change = change;
+          return Promise.map(change.Items, function(item) {
+            var fileName = '';
+            if(item.image_file) {
+              fileName = item.image_file
+            } else {
+              fileName = item.code + '.jpg'
+            }
+            return fs.readFileAsync('images/' + fileName);
+          })
         })
-            .then(function(change) {
-              var results = [];
-              _.each(change.Items, function(item) {
-                results.push(item.code);
-              })
-              return results;
-            })
-            .then(function(codes) {
-              // return reddirPromised('images/')
-              var promise = reddirPromised('images/');
-              return Promise.all([
-                codes,
-                reddirPromised('images/')
-              ])
-            })
-            .then(function(array) {
-              var searchResults = [];
-              _.each(array[0], function(code) {
-                var result = _.find(array[1], function(file) {
-                  return _.startsWith(file, code);
-                })
-                if(result) {
-                  searchResults.push({
-                    code: code,
-                    fileName: result
-                  })
-                }
-              })
-              return searchResults;
-            })
-            .then(function(searchResults) {
-              productCodes = searchResults;
-              return Promise.map(searchResults, function(result) {
-                return readFileAsync('images/' + result.fileName);
-              })
-            })
-            .then(function(files) {
-              var zip = new JSZip();
-              for(var i=0;i<productCodes.length;i++) {
-                zip.file(
-                   productCodes[i].fileName + '.jpg', "Hello World\n");
-              }
-            })
-            .then(sendResults);
+        .then(function(files) {
+          var zip = new JSZip();
+          for(var i=0;i<files.length;i++) {
+            zip.file(i + '.jpg', files[i])
+          }
+          var buffer = zip.generate({type:"nodebuffer"});
+          return fs.writeFileAsync("test.zip", buffer)
+        })
+        .then(sendResults);
 
         function sendResults(results) {
             res.json(results);
