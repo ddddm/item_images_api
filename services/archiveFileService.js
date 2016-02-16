@@ -16,6 +16,7 @@ module.exports = {
         return new JSZip(fileData).files;
       })
   },
+  
   codeFromFilename: function(fileName) {
     if(!fileName) return false;
     var code = fileName.split('/');
