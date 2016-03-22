@@ -4,7 +4,7 @@ var gm = require('gm');
 var fs = Promise.promisifyAll(require('fs'));
 
 var imageFolder = 'images/';
-var cacheFolder = 'cache/'
+var cacheFolder = 'cache/';
 
 module.exports = {
   jpg: function(fileName, size) {

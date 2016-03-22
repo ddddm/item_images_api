@@ -12,16 +12,15 @@ var upload = multer({dest: './uploads/'});
 
 var models = require('./models');
 var StatisticsService = require('./services/StatisticsService');
-var excelService = require('./services/excelService');
-var archiveFileService = require('./services/archiveFileService');
+var changeMetaService = require('./services/excelParser');
+var changeImagesService = require('./services/changeImagesService');
 var changeService = require('./services/changeService');
 var imageService = require('./services/imageService');
 
+var changesRouter = require('./routes/changes');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-
-var port = process.env.PORT || 8090;
 
 var changeUploadFileFields = [
     {name: 'xlsx'},
@@ -56,11 +55,7 @@ router.route('/items')
 router.route('/items/:item_id')
     .get(function (req, res) {
         models['Item'].findById(req.params.item_id)
-            .then(sendResults);
-
-        function sendResults(results) {
-            res.json(results);
-        }
+            .then(res.json);
     });
 
 router.route('/changes')
@@ -72,20 +67,20 @@ router.route('/changes')
         };
 
         Promise.all([
-            excelService.parse(req.files.xlsx[0].path),
-            archiveFileService.listFiles(req.files.zip[0].path)
+            changeMetaService.parse(req.files.xlsx[0].path),
+            changeImagesService.listFiles(req.files.zip[0].path)
         ])
             .spread(function (items, files) {
                 // construct single array of items
                 // which has corresponding files
                 var change = _.map(items, function (item) {
-                    // TODO: extract knowledge about excel structure to excelService
+                    // TODO: extract knowledge about excel structure to changeMetaService
                     // with defaultOptions and overwriteable GET params
-                    var constructedItem = excelService.createItemObject(item);
+                    var constructedItem = changeMetaService.createItemObject(item);
                     // file === undefiend - if we have no file
                     constructedItem.file = _.find(files, function (file) {
                         return file.name === item.image_file ||
-                            archiveFileService.codeFromFilename(file.name) == constructedItem.code
+                            changeImagesService.codeFromFilename(file.name) == constructedItem.code
                     });
                     return constructedItem;
                 })
@@ -101,14 +96,12 @@ router.route('/changes')
                     if (item.file) {
                         filteredItems.push(item);
                         filePromises.push(
-                            archiveFileService.saveFile(item.file)
+                            changeImagesService.saveFile(item.file)
                         )
                     } else {
                         stats.unusedItems.items.push(item)
                     }
-                })
-                console.log("Preparing the launch, capitan.");
-                console.log("We got " + filteredItems.length + " filtered items, " + filePromises.length + " file promises.");
+                });
 
                 return Promise.all([
                     filteredItems,
@@ -164,7 +157,7 @@ router.route('/changes/:change_id')
             }]
         })
 
-            // create promises for each  image file of Change item
+            // create promises for each image file of Change item
             .then(function (change) {
                 _change = change;
                 return Promise.map(change.Items, function (item) {
@@ -181,17 +174,17 @@ router.route('/changes/:change_id')
                 return fs.writeFileAsync("change_id" + _change.id + ".zip", buffer)
             })
 
+            .then(function () {
+                // generate xlsx
+            })
+
             // end request
             .then(function () {
-                return sendResults({
+                return res.json({
                     change: _change,
                     archive: "change_id" + _change.id + ".zip"
                 })
             });
-
-        function sendResults(results) {
-            res.json(results);
-        }
     });
 router.route('/image/:size/:filename')
     .get(function (req, res) {
@@ -201,14 +194,25 @@ router.route('/image/:size/:filename')
             })
 
 
-    })
+    });
 
-app.use('/api', router);
+router.route('/test')
+    .post(upload.fields(changeUploadFileFields), function (req, res) {
+
+            return changeMetaService.parse(req.files.xlsx[0].path)
+                .then(function(smth) {
+                    res.json(smth);
+                })
+
+    });
+
+app.use('/api/', router);
+app.use('/api/v2/', changesRouter);
 
 // START THE SERVER
 // =============================================================================
 models.sequelize.sync()
     .then(function () {
-        var server = app.listen(port);
-        console.log('Magic happens on ' + server.address().address + port);
+        var server = app.listen(8090);
+        console.log('Magic happens on ' + server.address().address + 8090);
     });
