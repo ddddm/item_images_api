@@ -2,33 +2,34 @@
 var parser = require('excel');
 var Promise = require('bluebird');
 var _ = require('lodash');
+var lowercaseFileExtension = require('./lowercaseFileExtension');
 
 var parseAsync = Promise.promisify(parser);
 
+// column order which they appear in excel file
 var parserConfig = {
     code: 0,
     name: 1,
     description: 2,
-    imageFile: 3
+    image_file: 3
 };
 
 function parseItem(itemArray) {
-    if(!itemArray) return null;
+    var item = {
+        valid: true
+    };
 
-    for(var i in parserConfig) {
-        if(!itemArray[i] || !_.isString(itemArray[i])) return null;
+    for(var prop in parserConfig) {
+        if(itemArray[parserConfig[prop]] && _.isString(itemArray[parserConfig[prop]])) {
+            item[prop] = itemArray[parserConfig[prop]];
+        } else {
+            item.valid = false;
+        }
     }
 
-    var array = itemArray[3].split('.');
-    array[array.length - 1] = _.toLower(array[array.length - 1]);
-    var image_file = array.join('.');
+    if(item.valid) item.image_file = lowercaseFileExtension(item.image_file);
 
-    return {
-        code: itemArray[0],
-        name: itemArray[1],
-        description: itemArray[2],
-        image_file: image_file
-    }
+    return item;
 }
 
 module.exports = {

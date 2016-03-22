@@ -14,6 +14,7 @@
     "excel": "^0.1.4",
     "excel-stream": "^1.1.1",
     "express": "^4.13.3",
+    "file-extension": "^2.0.1",
     "gm": "^1.21.1",
     "jszip": "^2.5.0",
     "lodash": "^4.6.1",

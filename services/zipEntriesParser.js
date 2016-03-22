@@ -2,32 +2,20 @@
 var Promise = require('bluebird');
 var StreamZip = require('node-stream-zip');
 var _ = require('lodash');
+var path = require('path');
+var lowercaseFileExtension = require('./lowercaseFileExtension');
+
 
 function buildFilesHash(rawFiles) {
     var filesHash = {};
 
     _.each(rawFiles, function (file) {
         if(file.isDirectory) return;
-        filesHash[normalizeFilename(file.name)] = file;
+        filesHash[path.basename(lowercaseFileExtension(file.name))] = file;
     });
 
     return filesHash;
 
-}
-
-function normalizeFilename(filename) {
-    if(!filename) return null;
-
-    var _filename, extension;
-    var array = filename.split('/');
-
-    _filename = array[array.length - 1];
-    array = _filename.split('.');
-    extension = _.toLower(array[array.length - 1]);
-
-    array[array.length - 1] = extension;
-
-    return array.join('.');
 }
 
 module.exports = {
