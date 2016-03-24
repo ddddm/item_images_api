@@ -2,7 +2,9 @@
 var Promise = require('bluebird');
 var StreamZip = require('node-stream-zip');
 var _ = require('lodash');
+var config = require('../config');
 var path = require('path');
+var fs = require('fs');
 var lowercaseFileExtension = require('./lowercaseFileExtension');
 
 
@@ -30,11 +32,21 @@ module.exports = {
                 reject(err)
             });
 
+            zip.on('entry', function(entry) {
+                entry.stream = zip.stream;
+            });
+
             zip.on('ready', function() {
                 console.log('Entries read: ' + _.size(zip.entries()));
                 resolve(buildFilesHash(zip.entries()));
             });
         })
+    },
+    toDisk: function (item, fileStream) {
+        var toDiskStream = fs.createWriteStream(
+            path.join(__dirname, '..', config.images.image_folder, item.image_file)
+        );
+        fileStream.pipe(toDiskStream);
     }
 
 };

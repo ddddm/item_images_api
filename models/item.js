@@ -17,32 +17,6 @@ module.exports = function(sequelize, DataTypes) {
         classMethods: {
             associate: function(models) {
                 Item.belongsToMany(models['Change'], {through: 'ItemChange'});
-            },
-            createFromList: function(items) {
-                return Promise.reduce(
-                    items,
-                    function (total, item) {
-                        return Item
-                            .findOrCreate({
-                                where: {
-                                    code: item.code
-                                },
-                                defaults: {
-                                    name: item.name,
-                                    description: item.description,
-                                    image_file: item.image_file
-                                }
-
-                            })
-                            .spread(function (item, created) {
-                                return _.union(total, [{
-                                    isCreated: created,
-                                    item: item
-                                }])
-                            })
-                    },
-                    []
-                )
             }
         },
         timestamps: false,
