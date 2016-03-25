@@ -83,6 +83,30 @@ router.route('/changes')
                     process.nextTick(function() { throw error; });
                     res.json({status: 'error'})
                 });
-        });
+        }
+    )
+     .get(function (req, res) {
+        var params = {
+            limit: 10,
+            include: [{
+                model: models['Item']
+            }]
+        };
+        models['Change'].findAll(params)
+            .then(function (change) {
+                return res.json(
+                    {
+                        status:'ok',
+                        result: change
+                    }
+                );
+            })
+            .catch(function (error) {
+                process.nextTick(function() { throw error; });
+                res.json({status: 'error'})
+            });
+
+    })
+
 
 module.exports = router;
