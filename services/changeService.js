@@ -20,7 +20,8 @@ module.exports = {
 
                     })
                     .spread(function (item, created) {
-                        return _.union(total, item);
+                        total.push(item);
+                        return total;
                     })
             },
             []
