@@ -18,6 +18,7 @@ var changeService = require('./services/changeService');
 var imageService = require('./services/imageService');
 
 var changesRouter = require('./routes/changes');
+var singleChangeRouter = require('./routes/singleChange');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
@@ -208,6 +209,7 @@ router.route('/test')
 
 app.use('/api/', router);
 app.use('/api/v2/', changesRouter);
+app.use('/api/v2/', singleChangeRouter);
 
 // START THE SERVER
 // =============================================================================
