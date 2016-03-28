@@ -64,17 +64,20 @@ router.route('/changes')
                     return changeService.createFromItems(validItems);
                 })
                 .then(function () {
-
-                })
-                .then(function () {
                     return res.json(
                         {
                             status:'ok',
+                            stats: {
+                                unusedFiles: unusedFiles.length,
+                                unusedItems: unusedItems.length,
+                                invalidItems: invalidItems.length,
+                                validItems: validItems.length
+                            },
                             result: {
-                                unusedFiles: unusedFiles,
-                                unusedItems: unusedItems,
-                                invalidItems: invalidItems,
-                                validItems: validItems
+                                unusedFiles: {total: unusedFiles.length, files: unusedFiles},
+                                unusedItems: {total: unusedItems.length, items: unusedItems},
+                                invalidItems: {total: invalidItems.length, items: invalidItems},
+                                validItems: {total: validItems.length, items: validItems}
                             }
                         }
                     );
