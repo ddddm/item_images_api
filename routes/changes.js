@@ -73,12 +73,12 @@ router.route('/changes')
                                 invalidItems: invalidItems.length,
                                 validItems: validItems.length
                             },
-                            result: {
-                                unusedFiles: {total: unusedFiles.length, files: unusedFiles},
-                                unusedItems: {total: unusedItems.length, items: unusedItems},
-                                invalidItems: {total: invalidItems.length, items: invalidItems},
-                                validItems: {total: validItems.length, items: validItems}
-                            }
+                            //result: {
+                            //    unusedFiles: {total: unusedFiles.length, files: unusedFiles},
+                            //    unusedItems: {total: unusedItems.length, items: unusedItems},
+                            //    invalidItems: {total: invalidItems.length, items: invalidItems},
+                            //    validItems: {total: validItems.length, items: validItems}
+                            //}
                         }
                     );
                 })

@@ -53,9 +53,11 @@ module.exports = {
             var sheet = wb.Sheets[wb.SheetNames[0]];
             var array = xlsx.utils.sheet_to_row_object_array(sheet,{raw:true});
 
-            resolve(_.map(array, function(itemObj) {
+            var items = _.map(array, function(itemObj) {
                 return parseItemObject(itemObj);
-            }))
+            });
+
+            resolve(items);
 
         });
 
