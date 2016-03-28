@@ -187,7 +187,7 @@ router.route('/changes/:change_id')
                 })
             });
     });
-router.route('/image/:size/:filename')
+router.route('/image/')
     .get(function (req, res) {
         imageService.jpg(req.params.filename, req.params.size)
             .then(function (res1) {
@@ -198,12 +198,16 @@ router.route('/image/:size/:filename')
     });
 
 router.route('/test')
-    .post(upload.fields(changeUploadFileFields), function (req, res) {
+    .get(function (req, res) {
 
-            return changeMetaService.parse(req.files.xlsx[0].path)
-                .then(function(smth) {
-                    res.json(smth);
-                })
+            //return imageService.jpg('57752.jpg', {
+            //    width: null,
+            //    height: null
+            //})
+        return imageService.jpg('57752.jpg')
+                .then(function (content) {
+                    res.json(content)
+                });
 
     });
 

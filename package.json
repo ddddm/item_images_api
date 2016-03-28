@@ -13,6 +13,7 @@
     "body-parser": "^1.14.1",
     "excel": "^0.1.4",
     "excel-stream": "^1.1.1",
+    "exceljs": "^0.2.5",
     "express": "^4.13.3",
     "file-extension": "^2.0.1",
     "gm": "^1.21.1",
