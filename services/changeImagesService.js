@@ -27,5 +27,4 @@ module.exports = {
     fileName = fileName[fileName.length-1];
     return writeFileAsync(imagesDirectory + "/" + fileName, file.asNodeBuffer())
   }
-
-}
+};

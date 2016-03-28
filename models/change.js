@@ -7,6 +7,7 @@ module.exports = function (sequelize, DataTypes) {
             associate: function(models) {
                 Change.belongsToMany(models['Item'], {through: 'ItemChange'});
             }
+
         },
         timestamps: true,
         tableName: 'change'
