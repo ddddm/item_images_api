@@ -1,6 +1,12 @@
 var Promise = require('bluebird');
 var express = require('express');
 var app = express();
+
+// replace real fs module globally
+var realFs = require('fs');
+var gracefulFs = require('graceful-fs');
+gracefulFs.gracefulify(realFs);
+
 var fs = Promise.promisifyAll(require("fs"));
 var bodyParser = require('body-parser');
 var Qs = require('qs');

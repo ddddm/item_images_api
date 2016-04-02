@@ -20,21 +20,21 @@ module.exports = {
 
                     })
                     .spread(function (item, created) {
-                        total.push(item);
+                        if(!total[item.id]) total[item.id] = item;
                         return total;
                     })
             },
-            []
+            {}
         )
     },
 
     createFromItems: function(items) {
         return this.createItemsSequentially(items)
-          .then(function (items) {
+          .then(function (itemsHash) {
               return models['Change']
                   .create()
                   .then(function (change) {
-                      return change.setItems(items);
+                      return change.setItems(_.values(itemsHash));
                   })
           });
   }
