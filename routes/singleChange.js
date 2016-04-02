@@ -6,6 +6,9 @@ var router = express.Router();
 
 var models = require('../models');
 var Excel = require('exceljs');
+var archiver = require('archiver');
+
+var imageService = require('../services/imageService');
 
 router.route('/changes/:change_id')
     .get(function (req, res) {
@@ -77,7 +80,44 @@ router.route('/changes/:change_id/excel')
 
 router.route('/changes/:change_id/zip')
     .get(function (req, res) {
-        res.json({'status': 'ok'})
+
+        var type = req.params.type;
+
+
+        var params = {
+            include: [{
+                model: models['Item']
+            }]
+        };
+        models['Change'].findById(req.params.change_id, params)
+            .then(function (change) {
+                return Promise.all([
+                    change,
+                    Promise.all(_.map(change.Items, function (item) {
+                        return imageService.jpg(item.image_file, {width: 100, height: 100});
+                    }))
+                ]);
+            })
+            .spread(function (change, files) {
+                var archive = archiver('zip');
+                var changeZip = fs.createWriteStream("zip/" + change.id + ".zip");
+
+                archive.pipe(changeZip);
+                _.each(files, function (file) {
+                    archive.file(file.path, { name: file.filename });
+
+                });
+                archive.finalize();
+
+            })
+            .then(function () {
+                res.json({'status': 'ok'})
+            })
+            .catch(function (error) {
+                process.nextTick(function() { throw error; });
+                res.json({status: 'error'})
+            });
+
     });
 
 module.exports = router;
