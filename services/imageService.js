@@ -39,9 +39,6 @@ module.exports = {
 
         // check cached file
         return fs.statAsync(path)
-            .then(function () {
-                return fs.readFileAsync(path)
-            })
             .catch(function () {
                 // cached file doesnt exist
                 console.log('ImageServer:File ' + path + ' didnt existed');
@@ -68,7 +65,10 @@ module.exports = {
                     })
             })
             .then(function () {
-                return fs.readFileAsync(path)
+                return {
+                    filename: fileNameJpg,
+                    path: path
+                };
             });
 
         function create(originalPath, jpgPath, size) {
