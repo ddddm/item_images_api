@@ -25,43 +25,34 @@ module.exports = {
         // 1. check cached file
         // 2. create new one if needed
 
+
+        // construct filename from original, replacing the extension
         var fileNameJpg = fileName.split('.');
         fileNameJpg.length = fileNameJpg.length - 1;
         fileNameJpg = fileNameJpg.join('.') + '.' + outputFormat;
 
+        // construct source path
         var sourcePath = imageFolder + fileName;
 
+        // construct cached path
         path = cacheFolder; // 'cached/'
         if(shoudBeResized) {
-            path +=  getCacheFolderName(normalizedSizeObject); // 'cached/100x100
+            path +=  getCacheFolderName(normalizedSizeObject) + '/'; // 'cached/100x100
         }
-        path += '/' + fileNameJpg;
+        path += fileNameJpg;
 
         // check cached file
         return fs.statAsync(path)
+            .then(function () {
+                console.log('ImageServer:File ' + path + ' exists')
+            })
             .catch(function () {
                 // cached file doesnt exist
                 console.log('ImageServer:File ' + path + ' didnt existed');
-                if(shoudBeResized) {
-                    // check if cache folder for this size exists
-                    return fs.statAsync(cacheFolder + getCacheFolderName(normalizedSizeObject))
-                        .catch(function () {
-                            // cache folder doesnt exists, creating
-                            console.log('ImageServer: folder didnt existed, created' + cacheFolder + size);
-                            return fs.mkdirAsync(cacheFolder + getCacheFolderName(normalizedSizeObject))
-                        })
-                        .then(function () {
-                            // creating the missing cached image
-                            return create(sourcePath, path, normalizedSizeObject)
-                                .then(function () {
-                                    console.log('ImageServer:File ' + path + ' didnt existed, created')
-                                })
-                        })
-                }
                 // creating the missing cached image
                 return create(sourcePath, path, normalizedSizeObject)
                     .then(function () {
-                        console.log('ImageServer:File ' + path + ' didnt existed, created')
+                        console.log('ImageServer:File ' + path + ' created')
                     })
             })
             .then(function () {
@@ -83,6 +74,17 @@ module.exports = {
 
             })
         }
+    },
+    cacheFolder: function (size) {
+        var normalizedSizeObject = normalizeSizeObject(size);
+
+        return fs.statAsync(cacheFolder + getCacheFolderName(normalizedSizeObject))
+            .catch(function () {
+                // cache folder doesnt exists, creating
+                console.log('ImageServer: folder didnt existed, created ' + cacheFolder + getCacheFolderName(normalizedSizeObject));
+                return fs.mkdirAsync(cacheFolder + getCacheFolderName(normalizedSizeObject))
+            })
+
     }
 };
 function normalizeSizeObject(size) {
@@ -94,8 +96,8 @@ function normalizeSizeObject(size) {
 
 function getCacheFolderName(size) {
 
-    var width = size.width? size.width : "";
-    var height = size.height? size.height : "";
+    var width = size.width? parseInt(size.width) : "";
+    var height = size.height? parseInt(size.height) : "";
 
     return width + 'x' + height;
 }

@@ -9,6 +9,7 @@ var Excel = require('exceljs');
 var archiver = require('archiver');
 
 var imageService = require('../services/imageService');
+var imageExportTypes = require('../services/imageExportTypes');
 
 router.route('/changes/:change_id')
     .get(function (req, res) {
@@ -81,7 +82,8 @@ router.route('/changes/:change_id/excel')
 router.route('/changes/:change_id/zip')
     .get(function (req, res) {
 
-        var type = req.params.type;
+        var type = req.query.type;
+        var size = imageExportTypes[type]? imageExportTypes[type].size: imageExportTypes['pricelist'].size;
 
 
         var params = {
@@ -89,12 +91,15 @@ router.route('/changes/:change_id/zip')
                 model: models['Item']
             }]
         };
-        models['Change'].findById(req.params.change_id, params)
-            .then(function (change) {
+        Promise.all([
+            models['Change'].findById(req.params.change_id, params),
+            imageService.cacheFolder(size)
+        ])
+            .spread(function (change) {
                 return Promise.all([
                     change,
                     Promise.all(_.map(change.Items, function (item) {
-                        return imageService.jpg(item.image_file, {width: 100, height: 100});
+                        return imageService.jpg(item.image_file, size);
                     }))
                 ]);
             })
