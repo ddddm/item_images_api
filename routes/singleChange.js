@@ -65,13 +65,13 @@ router.route('/changes/:change_id/excel')
                     }).commit();
                 });
 
-                return [workbook, worksheet]
+                return [workbook, worksheet, 'excels/' + change.id + '.xlsx']
 
             })
-            .spread(function (workbook, worksheet) {
+            .spread(function (workbook, worksheet, filename) {
                 worksheet.commit();
                 workbook.commit();
-                res.json({status: 'ok'})
+                res.json({status: 'ok', filename: filename})
             })
             .catch(function (error) {
                 process.nextTick(function() { throw error; });
@@ -85,7 +85,6 @@ router.route('/changes/:change_id/zip')
         var type = req.query.type;
         var size = imageExportTypes[type]? imageExportTypes[type].size: imageExportTypes['pricelist'].size;
 
-
         var params = {
             include: [{
                 model: models['Item']
@@ -96,27 +95,41 @@ router.route('/changes/:change_id/zip')
             imageService.cacheFolder(size)
         ])
             .spread(function (change) {
-                return Promise.all([
-                    change,
-                    Promise.all(_.map(change.Items, function (item) {
-                        return imageService.jpg(item.image_file, size);
-                    }))
-                ]);
-            })
-            .spread(function (change, files) {
-                var archive = archiver('zip');
-                var changeZip = fs.createWriteStream("zip/" + change.id + ".zip");
+                return new Promise(function (resolve, reject) {
+                    // create stream to write files into archive
+                    var archive = archiver('zip');
+                    // create disk stream to write archive
+                    var file = fs.createWriteStream("zip/" + change.id + ".zip");
 
-                archive.pipe(changeZip);
-                _.each(files, function (file) {
-                    archive.file(file.path, { name: file.filename });
+                    archive.pipe(file);
 
+                    file.on('close', function() {
+                        // stream done writing the file
+                        resolve("zip/" + change.id + ".zip")
+                    });
+
+                    archive.on('error', function(err) {
+                        reject(err);
+                    });
+
+                    // use Promise.map with "concurrency" to avoid gm errors,
+                    // processing only 30 images simultaneously
+                    Promise.map(change.Items, function (item) {
+                        return imageService.jpg(item.image_file, size)
+                            //adding to achive queue
+                            .then(function (file) {
+                                return archive.file(file.path, { name: file.filename });
+                            });
+                    }, {concurrency: 30})
+                        // all images added to queue!
+                        // close the queue
+                        .then(function () {
+                            archive.finalize();
+                        })
                 });
-                archive.finalize();
-
             })
-            .then(function () {
-                res.json({'status': 'ok'})
+            .then(function (filepath) {
+                res.json({'status': 'ok', filepath: filepath})
             })
             .catch(function (error) {
                 process.nextTick(function() { throw error; });

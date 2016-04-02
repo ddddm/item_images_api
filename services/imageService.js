@@ -43,17 +43,10 @@ module.exports = {
 
         // check cached file
         return fs.statAsync(path)
-            .then(function () {
-                console.log('ImageServer:File ' + path + ' exists')
-            })
             .catch(function () {
                 // cached file doesnt exist
-                console.log('ImageServer:File ' + path + ' didnt existed');
                 // creating the missing cached image
                 return create(sourcePath, path, normalizedSizeObject)
-                    .then(function () {
-                        console.log('ImageServer:File ' + path + ' created')
-                    })
             })
             .then(function () {
                 return {
