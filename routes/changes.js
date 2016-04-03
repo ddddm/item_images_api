@@ -76,6 +76,8 @@ router.route('/changes')
                             return unusedItems.push(item);
                         }
 
+                        item.image_file = entryName;
+
 
                         // Step 3: write corresponding file to disk
                         //

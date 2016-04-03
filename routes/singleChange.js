@@ -10,6 +10,7 @@ var archiver = require('archiver');
 
 var imageService = require('../services/imageService');
 var imageExportTypes = require('../services/imageExportTypes');
+var filenameWithoutExtension = require('../services/filenameWithoutExtension');
 
 router.route('/changes/:change_id')
     .get(function (req, res) {
@@ -61,7 +62,7 @@ router.route('/changes/:change_id/excel')
                         code: item.code,
                         name: item.name,
                         description: item.description,
-                        image_file: item.image_file
+                        image_file: filenameWithoutExtension(item.image_file) + '.jpg'
                     }).commit();
                 });
 
