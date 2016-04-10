@@ -9,7 +9,6 @@ var upload = multer({dest: './uploads/'});
 var excelParser = require('../services/excelParser');
 var zipEntriesParser = require('../services/zipEntriesParser');
 var changeService = require('../services/changeService');
-var filenameWithoutExtension = require('../services/filenameWithoutExtension');
 
 var models = require('../models');
 
@@ -65,10 +64,15 @@ router.route('/changes')
                         // search for file using naming convention:
                         // item code + validExtension
 
+                        function possibleFilename(code, ext) {
+                            return [code, ext].join('.');
+                        }
+
                         _.each(validExtensions, function(ext) {
-                            if(!entry && zipEntries[item.code + ext]) {
-                                entry = zipEntries[item.code + ext];
-                                entryName = item.code + ext;
+                            var name = possibleFilename(item.code, ext);
+                            if(!entry && zipEntries[name]) {
+                                entry = zipEntries[name];
+                                entryName = name;
                             }
                         });
 
@@ -93,8 +97,8 @@ router.route('/changes')
                         // to count unused images
 
                         if(
-                            zipEntries[entryName] !== 'no-picture.jpg' &&
-                            zipEntries[entryName] !== 'no-image.jpg'
+                            entryName !== 'no-picture.jpg' &&
+                            entryName !== 'no-image.jpg'
                         ) {
                             // we used this item
                             delete zipEntries[entryName];
@@ -125,12 +129,26 @@ router.route('/changes')
                                 invalidItems: invalidItems.length,
                                 validItems: validItems.length
                             },
-                            //result: {
-                            //    unusedFiles: {total: unusedFiles.length, files: unusedFiles},
-                            //    unusedItems: {total: unusedItems.length, items: unusedItems},
-                            //    invalidItems: {total: invalidItems.length, items: invalidItems},
-                            //    validItems: {total: validItems.length, items: validItems}
-                            //}
+                            result: {
+                                unusedFiles: {
+                                    total: unusedFiles.length,
+                                    files: _.map(unusedFiles, function(file) {
+                                        return file.name;
+                                    })
+                                },
+                                unusedItems: {
+                                    total: unusedItems.length,
+                                    items: _.map(unusedItems, function (item) {
+                                        return item.code + ', ' + item.image_file;
+                                    })
+                                },
+                                invalidItems: {
+                                    total: invalidItems.length,
+                                    items:  _.map(invalidItems, function (item) {
+                                        return item.code + ', ' + item.image_file;
+                                    })}
+                                //validItems: {total: validItems.length, items: validItems}
+                            }
                             //https://jsbin.com/fesuduzavo/edit?html,js,console,output
                         }
                     );
