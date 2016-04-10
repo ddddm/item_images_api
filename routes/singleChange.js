@@ -100,13 +100,13 @@ router.route('/changes/:change_id/zip')
                     // create stream to write files into archive
                     var archive = archiver('zip');
                     // create disk stream to write archive
-                    var file = fs.createWriteStream("zip/" + change.id + ".zip");
+                    var file = fs.createWriteStream("zip/" + change.id + "_" + imageExportTypes[type]? type: "" + ".zip");
 
                     archive.pipe(file);
 
                     file.on('close', function() {
                         // stream done writing the file
-                        resolve("zip/" + change.id + ".zip")
+                        resolve("zip/" + change.id + "_" + imageExportTypes[type]? type: "" + ".zip")
                     });
 
                     archive.on('error', function(err) {
