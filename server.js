@@ -23,9 +23,6 @@ var changeImagesService = require('./services/changeImagesService');
 var changeService = require('./services/changeService');
 var imageService = require('./services/imageService');
 
-var changesRouter = require('./routes/changes');
-var singleChangeRouter = require('./routes/singleChange');
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
@@ -218,8 +215,9 @@ router.route('/test')
     });
 
 app.use('/api/', router);
-app.use('/api/v2/', changesRouter);
-app.use('/api/v2/', singleChangeRouter);
+app.use('/api/v2/', require('./routes/changes'));
+app.use('/api/v2/', require('./routes/singleChange'));
+app.use('/api/v2/', require('./routes/checkChange'));
 
 // START THE SERVER
 // =============================================================================
