@@ -37,7 +37,6 @@ module.exports = {
             });
 
             zip.on('ready', function() {
-                console.log('Entries read: ' + _.size(zip.entries()));
                 resolve(buildFilesHash(zip.entries()));
             });
         })
