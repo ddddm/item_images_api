@@ -19,7 +19,7 @@ app.use('/api/', require('./routes/singleChange'));
 app.use('/api/', require('./routes/checkChange'));
 
 // START THE SERVER
-// =============================================================================
+var models = require('./models');
 models.sequelize.sync()
     .then(function () {
         var server = app.listen(8090);
