@@ -2,6 +2,8 @@ var models = require('./../models');
 var _ = require('lodash');
 var Promise = require('bluebird');
 
+var validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+
 module.exports = {
     createItemsSequentially: function(items) {
         return Promise.reduce(
@@ -19,7 +21,7 @@ module.exports = {
                         }
 
                     })
-                    .spread(function (item, created) {
+                    .spread(function (item) {
                         if(!total[item.id]) total[item.id] = item;
                         return total;
                     })
@@ -37,5 +39,37 @@ module.exports = {
                       return change.setItems(_.values(itemsHash));
                   })
           });
-  }
+    },
+
+    findImage: function (item, zipEntries) {
+        var entry, entryName;
+
+        if (zipEntries[item.image_file]) {
+            entry = zipEntries[item.image_file];
+            entryName = item.image_file;
+        }
+
+        // if the image doesn't have the exact name
+        // search for file using naming convention:
+        // item code + validExtension
+
+        function possibleFilename(code, ext) {
+            return [code, ext].join('.');
+        }
+
+        _.each(validExtensions, function (ext) {
+            var name = possibleFilename(item.code, ext);
+            if (!entry && zipEntries[name]) {
+                entry = zipEntries[name];
+                entryName = name;
+            }
+        });
+
+        if (entry) {
+            return {entry: entry, name: entryName};
+        }
+        else {
+            return null;
+        }
+    }
 };

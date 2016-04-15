@@ -18,8 +18,6 @@ router.route('/changes/check')
     upload.fields([{name: 'excel'}, {name: 'zip'}]),
     function (req, res) {
 
-        var validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
-
         if(_.isEmpty(req.files)) {
             // handle situation where 1 or more files aint' attached to POST
             return res.json(
@@ -41,77 +39,29 @@ router.route('/changes/check')
         ])
             .spread(function (items, zipEntries) {
                 _.each(items, function processItem(item) {
-
-
                     // Step 1: check this item is valid
-                    //
-
                     if(!item.valid) return invalidItems.push(item);
-
 
                     // Step 2:
                     // check this item has a corresponding
                     // image file attached
+                    var image = changeService.findImage(item, zipEntries);
 
-                    var entry, entryName;
-
-                    if(item.image_file === 'no-picture.jpg' ||
-                        item.image_file === 'no-image.jpg') {
-                        console.log('Noimage file!');
-                        if(zipEntries[item.image_file]) {
-                            console.log('Noimage file exists',item.image_file );
-                        } else {
-                            console.log('Error! Noimage file doesn\'t exists',item.image_file );
-                        }
-                    }
-
-                    if(zipEntries[item.image_file]) {
-                        entry = zipEntries[item.image_file];
-                        entryName = item.image_file;
-                    }
-
-                    // if the image doesn't have the exact name
-                    // search for file using naming convention:
-                    // item code + validExtension
-
-                    function possibleFilename(code, ext) {
-                        return [code, ext].join('.');
-                    }
-
-                    _.each(validExtensions, function(ext) {
-                        var name = possibleFilename(item.code, ext);
-                        if(!entry && zipEntries[name]) {
-                            entry = zipEntries[name];
-                            entryName = name;
-                        }
-                    });
-
-                    if(!entry) {
+                    if(!image) {
                         return unusedItems.push(item);
                     }
 
-                    item.image_file = entryName;
+                    item.image_file = image.name;
 
-
-                    // Step 3: write corresponding file to disk
-                    //
-
-                    entry.stream(entry.name, function (err, stm) {
-                        if(err) console.error('Error extracting stream for file: ' + entry.name);
-                        zipEntriesParser.toDisk(item, stm);
-                    });
-
-
-                    // Step 4:
+                    // Step 3:
                     // delete files from zip entries
                     // to count unused images
-
                     if(
-                        entryName !== 'no-picture.jpg' &&
-                        entryName !== 'no-image.jpg'
+                        image.name !== 'no-picture.jpg' &&
+                        image.name !== 'no-image.jpg'
                     ) {
                         // we used this item
-                        delete zipEntries[entryName];
+                        delete zipEntries[image.name];
                     }
 
                     // store item for database insertion
