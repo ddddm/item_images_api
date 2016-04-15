@@ -17,6 +17,7 @@ app.use(bodyParser.json());
 app.use('/api/', require('./routes/changes'));
 app.use('/api/', require('./routes/singleChange'));
 app.use('/api/', require('./routes/checkChange'));
+app.use('/api/', require('./routes/changeTask'));
 
 // START THE SERVER
 var models = require('./models');
