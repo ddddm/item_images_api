@@ -34,14 +34,7 @@ router.route('/change-task/')
             );
         }
 
-        var unusedFiles = [],
-            unusedItems = [],
-            invalidItems = [],
-            validItems = [];
-
-        //Promise.all([
         excelParser.parseRaw(req.files.excel[0].path)
-        //])
             .then(function (items) {
                 var itemsHash = _.keyBy(items, function (item) {
                         return item.code;
@@ -56,104 +49,51 @@ router.route('/change-task/')
                 ];
             })
             .spread(function(items, foundItems) {
-                var options = {
-                    useStyles: false,
-                    useSharedStrings: false
-                };
-                var date = '1';
 
-                _.forIn(items, function (item) {
-                    if(foundItems[item.code]) {
-                        item.exits = true;
-                    }
+                var date = new Date();
+
+                return new Promise(function (resolve, reject) {
+                    _.forIn(items, function (item) {
+                        if(foundItems[item.code]) {
+                            item.exits = true;
+                        }
+                    });
+
+                    var wb = new xl.WorkBook();
+                    var ws = wb.WorkSheet('Sheet');
+                    var i = 2;
+
+                    ws.Cell(1, 1).String('Код');
+                    ws.Cell(1, 2).String("ТМЦ");
+                    ws.Cell(1, 3).String("Описание");
+                    ws.Cell(1, 4).String("Картинка");
+                    ws.Cell(1, 5).String("В базе");
+
+                    _.forIn(items, function (item) {
+                        ws.Cell(i, 1).String(item.code.toString());
+                        ws.Cell(i, 2).String(item.name);
+                        ws.Cell(i, 3).String(item.description);
+                        ws.Cell(i, 4).String(item.image_file);
+                        ws.Cell(i, 5).String(foundItems[item.code] ? 'true' : 'false');
+
+                        i++;
+                    });
+
+                    wb.write('excels/task' + date.toString() + '.xlsx', function (err) {
+                        // done writing
+                        if(err) reject(err);
+                        resolve('excels/task' + date.toString() + '.xlsx');
+
+                    });
                 });
-
-                console.log('Items', _.size(items));
-
-                var workbook = new Excel.stream.xlsx.WorkbookWriter(options);
-                var file = fs.createWriteStream('excels/task' + date + '.xlsx');
-                workbook.zip.pipe(file);
-                var worksheet = workbook.addWorksheet("Sheet");
-
-                worksheet.columns = [
-                    { header: "Код", key: "code", width: 10 },
-                    { header: "ТМЦ", key: "name", width: 32 },
-                    { header: "Описание", key: "description", width: 32 },
-                    { header: "Картинка", key: "image_file", width: 10 },
-                    { header: "В базе", key: "exits", width: 10 }
-                ];
-
-                _.forIn(items, function (item) {
-                    //if(item.code == 58282) {
-                    //    //console.log(1,item);
-                    //    //item.name = item.name.replace(/[^A-Za-z 0-9 \.,\?""!@#\$%\^&\*\(\)-_=\+;:<>\/\\\|\}\{\[\]`~]*/g, '')
-                    //
-                    //    //item.name = item.name.replace('(', ' error ');
-                    //    //item.name = item.name.replace(')', ' error ');
-                    //    //item.name = item.name.replace('+', ' error ');
-                    //    //console.log(2,item);
-                    //    worksheet.addRow({
-                    //        code: item.code,
-                    //        name: item.name.toString(),
-                    //        description: item.description.toString(),
-                    //        image_file: item.image_file,
-                    //        exits: foundItems[item.code]? 'true': 'false'
-                    //    }).commit();
-                    //} else {
-                        worksheet.addRow({
-                            code: item.code,
-                            name: item.name.toString(),
-                            description: item.description.toString(),
-                            image_file: item.image_file,
-                            exits: foundItems[item.code] ? 'true' : 'false'
-                        }).commit();
-                    //}
-                });
-                return [workbook, worksheet, 'excels/task' + date + '.xlsx'];
             })
-            .spread(function (workbook, worksheet, filename) {
-                worksheet.commit();
-                workbook.commit();
+            .then(function (filename) {
 
                 res.json({
                     status: 'ok',
                     filename: filename
                 })
             })
-            //.then(function () {
-            //    return res.json(
-            //        {
-            //            status:'ok',
-            //            stats: {
-            //                unusedFiles: unusedFiles.length,
-            //                unusedItems: unusedItems.length,
-            //                invalidItems: invalidItems.length,
-            //                validItems: validItems.length
-            //            },
-            //            result: {
-            //                unusedFiles: {
-            //                    total: unusedFiles.length,
-            //                    files: _.map(unusedFiles, function(file) {
-            //                        return file.name;
-            //                    })
-            //                },
-            //                unusedItems: {
-            //                    total: unusedItems.length,
-            //                    items: _.map(unusedItems, function (item) {
-            //                        return item.code + ', ' + item.image_file;
-            //                    })
-            //                },
-            //                invalidItems: {
-            //                    total: invalidItems.length,
-            //                    items:  _.map(invalidItems, function (item) {
-            //                        return item.code + ', ' + item.image_file;
-            //                    })}
-            //                //validItems: {total: validItems.length, items: validItems}
-            //            }
-            //            //https://jsbin.com/fesuduzavo/edit?html,js,console,output
-            //        }
-            //    );
-            //})
             .catch(function (error) {
                 process.nextTick(function() { throw error; });
                 res.json({status: 'error'})
