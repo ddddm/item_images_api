@@ -55,16 +55,6 @@ router.route('/changes/check')
 
                     var entry, entryName;
 
-                    if(item.image_file === 'no-picture.jpg' ||
-                        item.image_file === 'no-image.jpg') {
-                        console.log('Noimage file!');
-                        if(zipEntries[item.image_file]) {
-                            console.log('Noimage file exists',item.image_file );
-                        } else {
-                            console.log('Error! Noimage file doesn\'t exists',item.image_file );
-                        }
-                    }
-
                     if(zipEntries[item.image_file]) {
                         entry = zipEntries[item.image_file];
                         entryName = item.image_file;
