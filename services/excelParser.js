@@ -53,11 +53,11 @@ module.exports = {
         });
     },
     /**
-     * Parse any excel document by given rules
+     * Parse pricelist
      * @param fileName
      * @returns {Promise}
      */
-    parseRaw: function (fileName, documentType) {
+    parsePricelist: function (fileName, documentType) {
         return new Promise(function(resolve, reject) {
             var wb = xlsx.readFile(fileName, {cellStyles: true});
             var sheet = wb.Sheets[wb.SheetNames[0]];

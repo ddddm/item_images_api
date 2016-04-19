@@ -2,18 +2,12 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var express = require('express');
 var router = express.Router();
-var Excel = require('exceljs');
-var fs = require('fs');
-var jsesc = require('jsesc');
 var xl = require('excel4node');
 
 var multer = require('multer');
 var upload = multer({dest: './uploads/'});
 
 var excelParser = require('../services/excelParser');
-var zipEntriesParser = require('../services/zipEntriesParser');
-var changeService = require('../services/changeService');
-var filenameWithoutExtension = require('../services/filenameWithoutExtension');
 
 var models = require('../models');
 
@@ -34,7 +28,7 @@ router.route('/change-task/')
             );
         }
 
-        excelParser.parseRaw(req.files.excel[0].path)
+        excelParser.parsePricelist(req.files.excel[0].path)
             .then(function (items) {
                 var itemsHash = _.keyBy(items, function (item) {
                         return item.code;
