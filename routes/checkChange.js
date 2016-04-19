@@ -52,7 +52,7 @@ router.route('/changes/check')
                     }
 
                     item.image_file = image.name;
-
+                    
                     // Step 3:
                     // delete files from zip entries
                     // to count unused images

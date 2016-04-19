@@ -84,6 +84,7 @@ router.route('/changes/:change_id/zip')
     .get(function (req, res) {
 
         var type = req.query.type;
+        if(!type) type = 'pricelist';
         var size = imageExportTypes[type]? imageExportTypes[type].size: imageExportTypes['pricelist'].size;
 
         var params = {
@@ -97,16 +98,18 @@ router.route('/changes/:change_id/zip')
         ])
             .spread(function (change) {
                 return new Promise(function (resolve, reject) {
+                    var _filename = filename(change.id, type, imageExportTypes);
+
                     // create stream to write files into archive
                     var archive = archiver('zip');
                     // create disk stream to write archive
-                    var file = fs.createWriteStream("zip/" + change.id + "_" + imageExportTypes[type]? type: "" + ".zip");
+                    var file = fs.createWriteStream(_filename);
 
                     archive.pipe(file);
 
                     file.on('close', function() {
                         // stream done writing the file
-                        resolve("zip/" + change.id + "_" + imageExportTypes[type]? type: "" + ".zip")
+                        resolve(_filename)
                     });
 
                     archive.on('error', function(err) {
@@ -126,7 +129,18 @@ router.route('/changes/:change_id/zip')
                         // close the queue
                         .then(function () {
                             archive.finalize();
-                        })
+                        });
+
+                    function filename(changeId, type, imageExportTypes) {
+                        var filename = '';
+                        filename += "zip/";
+                        filename += changeId.toString();
+                        filename += "_";
+                        filename += imageExportTypes[type]? type: "";
+                        filename += ".zip";
+
+                        return filename;
+                    }
                 });
             })
             .then(function (filepath) {
