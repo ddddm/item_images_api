@@ -18,12 +18,31 @@ function parseItemObject(itemObj) {
         valid: true
     };
 
-    if(itemObj.code) item.code = parseInt(itemObj.code); else item.valid = false;
-    if(itemObj.name && _.isString(itemObj.name)) item.name = itemObj.name; else item.valid = false;
-    if(itemObj.image_file && _.isString(itemObj.image_file)) item.image_file = itemObj.image_file; else item.valid = false;
-    if(itemObj.description && _.isString(itemObj.description)) item.description = itemObj.description;
+    if(itemObj.code) {
+        item.code = parseInt(itemObj.code);
+    } else {
+        item.valid = false;
+    }
 
-    if(item.valid) item.image_file = lowercaseFileExtension(item.image_file);
+    if(itemObj.name && _.isString(itemObj.name)) {
+        item.name = itemObj.name;
+    } else {
+        item.valid = false;
+    }
+
+    if(itemObj.image_file) {
+        item.image_file = _.toString(itemObj.image_file);
+    } else {
+        item.valid = false;
+    }
+
+    if(itemObj.description && _.isString(itemObj.description)) {
+        item.description = itemObj.description;
+    }
+
+    if(item.valid) {
+        item.image_file = lowercaseFileExtension(item.image_file);
+    }
 
     return item;
 }
