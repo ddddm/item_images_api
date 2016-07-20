@@ -11,7 +11,7 @@ var excelParser = require('../services/excelParser');
 
 var models = require('../models');
 
-router.route('/change-task/')
+router.route('/changes/task/')
     .post(
     upload.fields([{name: 'excel'}]),
     function (req, res) {
