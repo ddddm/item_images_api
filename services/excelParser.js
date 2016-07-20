@@ -5,14 +5,6 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var lowercaseFileExtension = require('./lowercaseFileExtension');
 
-// column order which they appear in excel file
-var parserConfig = {
-    code: 0,
-    name: 1,
-    description: 2,
-    image_file: 3
-};
-
 function parseItemObject(itemObj) {
     var item = {
         valid: true
@@ -45,11 +37,6 @@ function parseItemObject(itemObj) {
     }
 
     return item;
-}
-
-function cellAddress(column, row) {
-    if(!column || !row) return null;
-    return column.toUpperCase().toString() + row.toString();
 }
 
 module.exports = {
