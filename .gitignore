@@ -9,6 +9,7 @@ node_modules/
 database/
 excels/
 zip/
+test/
 uploads/
 cache/
 images/
