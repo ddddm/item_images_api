@@ -126,14 +126,24 @@ router.route('/changes')
     )
      .get(function (req, res) {
         var params = {
-            limit: 10
+            //limit: 20,
         };
         models['Change'].findAll(params)
-            .then(function (change) {
+            .then(function (changes) {
+                return Promise.map(changes, function (change) {
+                    return change.countItems()
+                        .then(function (itemCount) {
+                            return _.assign({}, change.get(), {
+                                itemCount: itemCount
+                            });
+                        })
+                })
+            })
+            .then(function (changes) {
                 return res.json(
                     {
                         status:'ok',
-                        result: change
+                        result: changes
                     }
                 );
             })
