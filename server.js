@@ -18,6 +18,7 @@ app.use('/api/', require('./routes/changes'));
 app.use('/api/', require('./routes/singleChange'));
 app.use('/api/', require('./routes/checkChange'));
 app.use('/api/', require('./routes/changeTask'));
+app.use('/api/', require('./routes/export'));
 
 // START THE SERVER
 var models = require('./models');
