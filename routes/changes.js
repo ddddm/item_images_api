@@ -17,7 +17,7 @@ router.route('/changes')
         upload.fields([{name: 'excel'}, {name: 'zip'}]),
         function (req, res) {
 
-            if(_.isEmpty(req.files)) {
+            if(_.isEmpty(req.files) || _.isEmpty(req.files.excel) || _.isEmpty(req.files.zip)) {
                 // handle situation where 1 or more files aint' attached to POST
                 return res.json(
                     {
