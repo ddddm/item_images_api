@@ -1,5 +1,6 @@
 var Promise = require('bluebird');
 var _ = require('lodash');
+var moment = require('moment');
 var express = require('express');
 var router = express.Router();
 var xl = require('excel4node');
@@ -44,7 +45,7 @@ router.route('/changes/task/')
             })
             .spread(function(items, foundItems) {
 
-                var date = new Date();
+                var fileName = moment().format('MM-DD-YYYY_kk-mm');
 
                 return new Promise(function (resolve, reject) {
                     _.forIn(items, function (item) {
@@ -73,10 +74,10 @@ router.route('/changes/task/')
                         i++;
                     });
 
-                    wb.write('excels/task' + date.toString() + '.xlsx', function (err) {
+                    wb.write('excels/task' + fileName + '.xlsx', function (err) {
                         // done writing
                         if(err) reject(err);
-                        resolve('excels/task' + date.toString() + '.xlsx');
+                        resolve('excels/task' + fileName + '.xlsx');
 
                     });
                 });
