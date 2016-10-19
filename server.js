@@ -11,8 +11,8 @@ var bodyParser = require('body-parser');
 var _ = require('lodash');
 
 
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({limit: '128mb', extended: true}));
+app.use(bodyParser.json({limit: '128mb'}));
 
 app.use('/api/', require('./routes/changes'));
 app.use('/api/', require('./routes/singleChange'));

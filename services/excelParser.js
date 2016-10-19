@@ -24,8 +24,6 @@ function parseItemObject(itemObj) {
 
     if(itemObj.image_file) {
         item.image_file = _.toString(itemObj.image_file);
-    } else {
-        item.valid = false;
     }
 
     if(itemObj.description && _.isString(itemObj.description)) {
@@ -91,8 +89,9 @@ module.exports = {
                 var item = {};
                 _.each(documentType.columns, function(column, symbol) {
                     if(sheet[symbol + i.toString()]) {
-                        var resultBuffer = encoding.convert(sheet[symbol + i.toString()].v, 'utf8', 'cp1251');
-                        item[column] = resultBuffer.toString('utf8');
+                        // var resultBuffer = encoding.convert(sheet[symbol + i.toString()].v, 'utf8', 'cp1251');
+                        // item[column] = resultBuffer.toString('utf8');
+                        item[column] = sheet[symbol + i.toString()].v;
                     }
                 });
 
