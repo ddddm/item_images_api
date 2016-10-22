@@ -9,6 +9,7 @@ var multer = require('multer');
 var upload = multer({dest: './uploads/'});
 
 var excelParser = require('../services/excelParser');
+var config = require('../config');
 
 var models = require('../models');
 
@@ -45,7 +46,21 @@ router.route('/changes/task/')
             })
             .spread(function(items, foundItems) {
 
-                var fileName = moment().format('MM-DD-YYYY_kk-mm');
+                var fileName = [
+                    'task',
+                    moment().format('MM-DD-YYYY_kk-mm'),
+                    'xlsx'
+                ].join('.');
+
+                var absFilePath = path.join(
+                    config.CHANGE_TASK_EXCEL_FILE.ABS_PATH,
+                    fileName
+                );
+
+                var relFilePath = path.join(
+                    config.CHANGE_TASK_EXCEL_FILE.LOCAL_PATH,
+                    fileName
+                );
 
                 return new Promise(function (resolve, reject) {
 
@@ -75,19 +90,19 @@ router.route('/changes/task/')
                         i++;
                     });
 
-                    wb.write(__dirname + '/../excels/task' + fileName + '.xlsx', function (err) {
+                    wb.write(absFilePath, function (err) {
                         // done writing
                         if(err) reject(err);
-                        resolve('excels/task' + fileName + '.xlsx');
+                        resolve(relFilePath);
 
                     });
                 });
             })
-            .then(function (filename) {
+            .then(function (downloadPath) {
 
                 res.json({
                     status: 'ok',
-                    filename: filename
+                    file_path: downloadPath
                 })
             })
             .catch(function (error) {

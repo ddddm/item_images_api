@@ -10,6 +10,7 @@ gracefulFs.gracefulify(realFs);
 var bodyParser = require('body-parser');
 var _ = require('lodash');
 
+var config = require('./config');
 
 app.use(bodyParser.urlencoded({limit: '128mb', extended: true}));
 app.use(bodyParser.json({limit: '128mb'}));
@@ -24,6 +25,6 @@ app.use('/api/', require('./routes/export'));
 var models = require('./models');
 models.sequelize.sync()
     .then(function () {
-        var server = app.listen(8090);
-        console.log('Magic happens on ' + server.address().address + 8090);
+        var server = app.listen(config.PORT);
+        console.log('Magic happens on ' + server.address().address + config.PORT);
     });

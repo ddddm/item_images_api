@@ -2,11 +2,13 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var express = require('express');
 var fs = require('fs');
+var path = require('path');
 var router = express.Router();
 
 var models = require('../models');
 var Excel = require('exceljs');
 var archiver = require('archiver');
+var config = require('../config');
 
 var imageService = require('../services/imageService');
 var imageExportTypes = require('../services/imageExportTypes');
@@ -46,9 +48,13 @@ router.route('/changes/:change_id/excel')
         models['Change'].findById(req.params.change_id, params)
             .then(function (change) {
                 var workbook = new Excel.stream.xlsx.WorkbookWriter(options);
-                var file = fs.createWriteStream('excels/' + change.id + '.xlsx');
-                workbook.zip.pipe(file);
+                var fileName = ['change', change.id, 'xlsx'].join('.');
+                var absFilePath = path.join(config.CHANGE_EXCEL_FILE.ABS_PATH, fileName)
+                var relFilePath = path.join(config.CHANGE_EXCEL_FILE.LOCAL_PATH, fileName)
+                var stream = fs.createWriteStream(absFilePath);
                 var worksheet = workbook.addWorksheet("Sheet");
+
+                workbook.zip.pipe(stream);
 
                 worksheet.columns = [
                     { header: "Код", key: "code", width: 10 },
@@ -66,13 +72,13 @@ router.route('/changes/:change_id/excel')
                     }).commit();
                 });
 
-                return [workbook, worksheet, 'excels/' + change.id + '.xlsx']
+                return [workbook, worksheet, relFilePath]
 
             })
             .spread(function (workbook, worksheet, filename) {
                 worksheet.commit();
                 workbook.commit();
-                res.json({status: 'ok', filename: filename})
+                res.json({status: 'ok', file_path: filename})
             })
             .catch(function (error) {
                 process.nextTick(function() { throw error; });
@@ -98,18 +104,21 @@ router.route('/changes/:change_id/zip')
         ])
             .spread(function (change) {
                 return new Promise(function (resolve, reject) {
-                    var _filename = filename(change.id, type, imageExportTypes);
+
+                    var fileName = filename(change.id, type, imageExportTypes);
+                    var absFilePath = path.join(config.CHANGE_ZIP_FILE.ABS_PATH, fileName)
+                    var relFilePath = path.join(config.CHANGE_ZIP_FILE.LOCAL_PATH, fileName)
 
                     // create stream to write files into archive
                     var archive = archiver('zip');
                     // create disk stream to write archive
-                    var file = fs.createWriteStream(_filename);
+                    var file = fs.createWriteStream(absFilePath);
 
                     archive.pipe(file);
 
                     file.on('close', function() {
                         // stream done writing the file
-                        resolve(_filename)
+                        resolve(relFilePath)
                     });
 
                     archive.on('error', function(err) {
@@ -132,19 +141,17 @@ router.route('/changes/:change_id/zip')
                         });
 
                     function filename(changeId, type, imageExportTypes) {
-                        var filename = '';
-                        filename += "zip/";
-                        filename += changeId.toString();
-                        filename += "_";
-                        filename += imageExportTypes[type]? type: "";
-                        filename += ".zip";
-
-                        return filename;
+                        return [
+                            changeId.toString(),
+                            '_',
+                            imageExportTypes[type]? type: "",
+                            ".zip"
+                        ].join('')
                     }
                 });
             })
             .then(function (filepath) {
-                res.json({'status': 'ok', filepath: filepath})
+                res.json({'status': 'ok', file_path: filepath})
             })
             .catch(function (error) {
                 process.nextTick(function() { throw error; });

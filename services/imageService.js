@@ -2,9 +2,10 @@
 
 var Promise = require('bluebird');
 var gm = require('gm');
+var path = require('path');
 var fs = Promise.promisifyAll(require('fs'));
+var config = require(__dirname + '/../config')
 
-var imageFolder = 'images/';
 var cacheFolder = 'cache/';
 
 module.exports = {
@@ -12,7 +13,7 @@ module.exports = {
 
         var normalizedSizeObject = normalizeSizeObject(size);
         var outputFormat = 'jpg';
-        var path;
+        var filePath;
 
         var shoudBeResized = !!(normalizedSizeObject.width || normalizedSizeObject.height);
 
@@ -31,27 +32,33 @@ module.exports = {
         fileNameJpg.length = fileNameJpg.length - 1;
         fileNameJpg = fileNameJpg.join('.') + '.' + outputFormat;
 
-        // construct source path
-        var sourcePath = imageFolder + fileName;
+        // construct source filePath
+        var sourcePath = path.join(
+            config.IMAGE_FILE.ABS_PATH,
+            fileName
+        );
 
-        // construct cached path
-        path = cacheFolder; // 'cached/'
+        // construct cached filePath
+        filePath = config.IMAGE_CACHE_FILE.ABS_PATH;
         if(shoudBeResized) {
-            path +=  getCacheFolderName(normalizedSizeObject) + '/'; // 'cached/100x100
+            filePath =  path.join(
+                filePath,
+                getCacheFolderName(normalizedSizeObject)
+            ); // 'cached/100x100
         }
-        path += fileNameJpg;
+        filePath = path.join(filePath, fileNameJpg);
 
         // check cached file
-        return fs.statAsync(path)
+        return fs.statAsync(filePath)
             .catch(function () {
                 // cached file doesnt exist
                 // creating the missing cached image
-                return create(sourcePath, path, normalizedSizeObject)
+                return create(sourcePath, filePath, normalizedSizeObject)
             })
             .then(function () {
                 return {
                     filename: fileNameJpg,
-                    path: path
+                    path: filePath
                 };
             });
 
@@ -71,11 +78,29 @@ module.exports = {
     cacheFolder: function (size) {
         var normalizedSizeObject = normalizeSizeObject(size);
 
-        return fs.statAsync(cacheFolder + getCacheFolderName(normalizedSizeObject))
+        return fs.statAsync(
+            path.join(
+                config.IMAGE_CACHE_FILE.ABS_PATH,
+                getCacheFolderName(normalizedSizeObject)
+            )
+        )
             .catch(function () {
+
                 // cache folder doesnt exists, creating
-                console.log('ImageServer: folder didnt existed, created ' + cacheFolder + getCacheFolderName(normalizedSizeObject));
-                return fs.mkdirAsync(cacheFolder + getCacheFolderName(normalizedSizeObject))
+                console.log(
+                    'ImageServer: folder didnt existed, created',
+                    path.join(
+                        cacheFolder,
+                        getCacheFolderName(normalizedSizeObject)
+                    )
+                );
+
+                return fs.mkdirAsync(
+                    path.join(
+                        config.IMAGE_CACHE_FILE.ABS_PATH,
+                        getCacheFolderName(normalizedSizeObject)
+                    )
+                )
             })
 
     }

@@ -21,10 +21,10 @@ function buildFilesHash(rawFiles) {
 }
 
 module.exports = {
-    parse: function(fileName) {
+    parse: function(path) {
         return new Promise(function (resolve, reject) {
             var zip = new StreamZip({
-                file: fileName,
+                file: path,
                 storeEntries: true
             });
 
@@ -43,7 +43,7 @@ module.exports = {
     },
     toDisk: function (item, fileStream) {
         var toDiskStream = fs.createWriteStream(
-            path.join(__dirname, '..', config.images.image_folder, item.image_file)
+            path.join(config.IMAGE_FILE.ABS_PATH, item.image_file)
         );
         fileStream.pipe(toDiskStream);
     }
