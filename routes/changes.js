@@ -84,10 +84,11 @@ router.route('/changes')
                     // create new Change
                     return changeService.createFromItems(validItems);
                 })
-                .then(function () {
+                .then(function (change) {
                     return res.json(
                         {
                             status:'ok',
+                            changeId: change.id,
                             stats: {
                                 unusedFiles: unusedFiles.length,
                                 unusedItems: unusedItems.length,
