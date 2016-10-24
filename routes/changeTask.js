@@ -9,6 +9,7 @@ var multer = require('multer');
 var upload = multer({dest: './uploads/'});
 
 var excelParser = require('../services/excelParser');
+var config = require('../config');
 
 var models = require('../models');
 
@@ -45,14 +46,23 @@ router.route('/changes/task/')
             })
             .spread(function(items, foundItems) {
 
-                var fileName = moment().format('MM-DD-YYYY_kk-mm');
+                var fileName = [
+                    'task',
+                    moment().format('MM-DD-YYYY_kk-mm'),
+                    'xlsx'
+                ].join('.');
+
+                var absFilePath = path.join(
+                    config.CHANGE_TASK_EXCEL_FILE.ABS_PATH,
+                    fileName
+                );
+
+                var relFilePath = path.join(
+                    config.CHANGE_TASK_EXCEL_FILE.LOCAL_PATH,
+                    fileName
+                );
 
                 return new Promise(function (resolve, reject) {
-                    _.forIn(items, function (item) {
-                        if(foundItems[item.code]) {
-                            item.exits = true;
-                        }
-                    });
 
                     var wb = new xl.WorkBook();
                     var ws = wb.WorkSheet('Sheet');
@@ -63,30 +73,36 @@ router.route('/changes/task/')
                     ws.Cell(1, 3).String("Описание");
                     ws.Cell(1, 4).String("Картинка");
                     ws.Cell(1, 5).String("В базе");
+                    ws.Cell(1, 6).String("В базе - картинка");
 
                     _.forIn(items, function (item) {
                         ws.Cell(i, 1).String(item.code.toString());
                         ws.Cell(i, 2).String(item.name);
-                        ws.Cell(i, 3).String(item.description);
-                        ws.Cell(i, 4).String(item.image_file);
+                        ws.Cell(i, 3).String(item.description? item.description : '');
+
+                        if(item.image_file) {
+                            ws.Cell(i, 4).String(item.image_file);
+                        }
+
                         ws.Cell(i, 5).String(foundItems[item.code] ? 'true' : 'false');
+                        ws.Cell(i, 6).String(foundItems[item.code] && foundItems[item.code].image_file ? foundItems[item.code].image_file : '');
 
                         i++;
                     });
 
-                    wb.write(__dirname + '/../excels/task' + fileName + '.xlsx', function (err) {
+                    wb.write(absFilePath, function (err) {
                         // done writing
                         if(err) reject(err);
-                        resolve('excels/task' + fileName + '.xlsx');
+                        resolve(relFilePath);
 
                     });
                 });
             })
-            .then(function (filename) {
+            .then(function (downloadPath) {
 
                 res.json({
                     status: 'ok',
-                    filename: filename
+                    file_path: downloadPath
                 })
             })
             .catch(function (error) {
