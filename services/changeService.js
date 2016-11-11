@@ -36,7 +36,8 @@ module.exports = {
               return models['Change']
                   .create()
                   .then(function (change) {
-                      return change.setItems(_.values(itemsHash));
+                      change.setItems(_.values(itemsHash));
+                      return change;
                   })
           });
     },

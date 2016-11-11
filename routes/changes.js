@@ -88,7 +88,7 @@ router.route('/changes')
                     return res.json(
                         {
                             status:'ok',
-                            changeId: change.id,
+                            changeId: change.get().id,
                             stats: {
                                 unusedFiles: unusedFiles.length,
                                 unusedItems: unusedItems.length,
