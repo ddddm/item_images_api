@@ -13,6 +13,7 @@
     "bluebird": "^3.0.1",
     "body-parser": "^1.14.1",
     "cors": "^2.8.1",
+    "debug": "^2.3.2",
     "encoding": "^0.1.12",
     "excel": "^0.1.4",
     "excel-stream": "^1.1.1",

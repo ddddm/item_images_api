@@ -15,10 +15,14 @@ var config = require('../config');
 
 var models = require('../models');
 
+var logger = debug('vitekApi:createTask')
+
 router.route('/changes/task/')
     .post(
     upload.fields([{name: 'excel'}]),
     function (req, res) {
+
+        const files = req.files.excel;
 
         var validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
 
@@ -32,8 +36,29 @@ router.route('/changes/task/')
             );
         }
 
-        excelParser.parsePricelist(req.files.excel[0].path)
+        logger(`Got ${files.length} files from request`);
+
+        Promise.all(
+            files.map((file) => {
+                return excelParser.parsePricelist(file.path)
+            })
+        )
+            .then( pricelists => {
+                logger(`Pricelists are parsed.`)
+                logger(`There are ${pricelists.length} price lists`);
+
+                let items = [];
+
+                _.each(pricelists, pricelist => {
+                    items = _.unionBy(items, pricelist, item => item.code)
+                })
+
+                return items
+            })
             .then(function (items) {
+
+                logger(`Got ${items.length} items after union`)
+
                 var itemsHash = _.keyBy(items, function (item) {
                         return item.code;
                 });
@@ -46,8 +71,10 @@ router.route('/changes/task/')
                     )
                 ];
             })
-            .spread(function(items, foundItems) {
+            .spread(function(items, foundedItems) {
 
+                items = _.filter(items, (item) => foundedItems[item.code] === null)
+                
                 var fileName = [
                     'task',
                     moment().format('MM-DD-YYYY_kk-mm'),
@@ -73,38 +100,32 @@ router.route('/changes/task/')
                     ws.Cell(1, 1).String('Код');
                     ws.Cell(1, 2).String("ТМЦ");
                     ws.Cell(1, 3).String("Описание");
-                    ws.Cell(1, 4).String("Картинка");
-                    ws.Cell(1, 5).String("В базе");
-                    ws.Cell(1, 6).String("В базе - картинка");
+                    ws.Cell(1, 5).String("Картинка");
 
-                    _.forIn(items, function (item) {
-                        ws.Cell(i, 1).String(item.code.toString());
-                        ws.Cell(i, 2).String(item.name);
-                        ws.Cell(i, 3).String(item.description? item.description : '');
-
-                        if(item.image_file) {
-                            ws.Cell(i, 4).String(item.image_file);
-                        }
-
-                        ws.Cell(i, 5).String(foundItems[item.code] ? 'true' : 'false');
-                        ws.Cell(i, 6).String(foundItems[item.code] && foundItems[item.code].image_file ? foundItems[item.code].image_file : '');
-
-                        i++;
+                    _.each(
+                        items,
+                        function (item) {
+                            var thisItem = item;
+                            ws.Cell(i, 1).String(thisItem.code.toString());
+                            ws.Cell(i, 2).String(thisItem.name);
+                            ws.Cell(i, 3).String(thisItem.description? thisItem.description : '');
+                            i++;
                     });
 
                     wb.write(absFilePath, function (err) {
                         // done writing
                         if(err) reject(err);
-                        resolve(relFilePath);
+                        resolve([relFilePath, items]);
 
                     });
                 });
             })
-            .then(function (downloadPath) {
+            .spread(function (downloadPath, notFoundedItems) {
 
                 res.json({
                     status: 'ok',
-                    file_path: downloadPath
+                    file_path: downloadPath,
+                    result: notFoundedItems
                 })
             })
             .catch(function (error) {
