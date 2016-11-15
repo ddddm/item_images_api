@@ -4,7 +4,7 @@
   "description": "Service for storing, matching and updating pictures for goods",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "source $HOME/.nvm/nvm.sh; nvm use; node node_modules/mocha/bin/mocha './**/*.spec.js'"
   },
   "author": "",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "debug": "^2.3.2",
     "encoding": "^0.1.12",
     "excel": "^0.1.4",
+    "excel-column-name": "^1.0.0",
     "excel-stream": "^1.1.1",
     "excel4node": "^0.5.1",
     "exceljs": "^0.2.5",
@@ -35,5 +36,9 @@
     "sqlite3": "^3.1.0",
     "utf8": "^2.1.1",
     "xlsx": "^0.8.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2"
   }
 }
