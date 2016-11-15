@@ -40,7 +40,7 @@ router.route('/changes/task/')
 
         Promise.all(
             files.map((file) => {
-                return excelParser.parsePricelist(file.path)
+                return excelParser.parseAutodetectHeaders(file.path)
             })
         )
             .then( pricelists => {
@@ -74,6 +74,8 @@ router.route('/changes/task/')
             .spread(function(items, foundedItems) {
 
                 items = _.filter(items, (item) => foundedItems[item.code] === null)
+
+                logger(`${items.length} items are not found in the database`);
                 
                 var fileName = [
                     'task',
