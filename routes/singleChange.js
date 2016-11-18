@@ -59,7 +59,8 @@ router.route('/changes/:change_id/excel')
                 worksheet.columns = [
                     { header: "Код", key: "code", width: 10 },
                     { header: "ТМЦ", key: "name", width: 32 },
-                    { header: "Описание", key: "description", width: 32 },
+                    { header: "", key: "", width: 10 },
+                    { header: "", key: "", width: 10 },
                     { header: "Картинка", key: "image_file", width: 10 }
                 ];
 
