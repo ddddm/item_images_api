@@ -99,10 +99,10 @@ router.route('/changes/task/')
                     var ws = wb.WorkSheet('Sheet');
                     var i = 2;
 
-                    ws.Cell(1, 1).String('Код');
-                    ws.Cell(1, 2).String("ТМЦ");
-                    ws.Cell(1, 3).String("Описание");
-                    ws.Cell(1, 5).String("Картинка");
+                    ws.Cell(1, 1).String('code');
+                    ws.Cell(1, 2).String("name");
+                    ws.Cell(1, 3).String("description");
+                    ws.Cell(1, 5).String("image_file");
 
                     _.each(
                         items,
