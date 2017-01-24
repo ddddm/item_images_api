@@ -4,6 +4,7 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var fs = require('fs');
 const moment = require('moment');
+const path = require('path');
 
 var express = require('express');
 var router = express.Router();
