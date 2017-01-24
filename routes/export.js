@@ -3,6 +3,7 @@
 var Promise = require('bluebird');
 var _ = require('lodash');
 var fs = require('fs');
+const moment = require('moment');
 
 var express = require('express');
 var router = express.Router();
@@ -15,6 +16,7 @@ var models = require('../models');
 var Excel = require('exceljs');
 var archiver = require('archiver');
 
+const config = require('../config');
 var imageService = require('../services/imageService');
 var imageExportTypes = require('../services/imageExportTypes');
 var filenameWithoutExtension = require('../services/filenameWithoutExtension');
@@ -68,18 +70,21 @@ router.route('/export')
 
         function exportItemsToZip(items) {
             return new Promise(function (resolve, reject) {
-                var _filename = filename();
+
+                const filename = [moment().format('MM-DD-YYYY_kk-mm-ss'), 'zip'].join('.')
+                const relPath = path.join(config.CHANGE_ZIP_FILE.LOCAL_PATH, filename);
+                const absPath = path.join(config.CHANGE_ZIP_FILE.ABS_PATH, filename);
 
                 // create stream to write files into archive
                 var archive = archiver('zip');
                 // create disk stream to write archive
-                var file = fs.createWriteStream(_filename);
+                var file = fs.createWriteStream(absPath);
 
                 archive.pipe(file);
 
                 file.on('close', function() {
                     // stream done writing the file
-                    resolve(_filename)
+                    resolve(relPath)
                 });
 
                 archive.on('error', function(err) {
@@ -100,17 +105,6 @@ router.route('/export')
                     .then(function () {
                         archive.finalize();
                     });
-
-                function filename() {
-                    var filename = '';
-                    filename += "zip/";
-                    filename += new Date().toString();
-                    filename += "_";
-                    filename += "export";
-                    filename += ".zip";
-
-                    return filename;
-                }
             });
         }
         function createExcelFile(items) {
@@ -118,10 +112,13 @@ router.route('/export')
                 useStyles: false,
                 useSharedStrings: true
             };
-            return new Promise(function (resolve, reject) {
-                var filename = 'excels/' + new Date() + '_export.xlsx';
+            return new Promise(function (resolve) {
+                const filename = [moment().format('MM-DD-YYYY_kk-mm-ss'), 'xlsx'].join('.')
+                const relPath = path.join(config.CHANGE_EXCEL_FILE.LOCAL_PATH, filename);
+                const absPath = path.join(config.CHANGE_EXCEL_FILE.ABS_PATH, filename);
+
                 var workbook = new Excel.stream.xlsx.WorkbookWriter(options);
-                var file = fs.createWriteStream(filename);
+                var file = fs.createWriteStream(absPath);
                 workbook.zip.pipe(file);
                 var worksheet = workbook.addWorksheet("Sheet");
 
@@ -141,7 +138,7 @@ router.route('/export')
                     }).commit();
                 });
 
-                resolve([worksheet, workbook, filename])
+                resolve([worksheet, workbook, relPath])
             })
                 .spread(function (worksheet, workbook, filename) {
                     worksheet.commit();
