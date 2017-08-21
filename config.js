@@ -30,11 +30,14 @@ self = {
     "storage": "database/database.sqlite",
     "logging": null
 };
-
-fs.mkdirSync(self.CHANGE_EXCEL_FILE.ABS_PATH)
-fs.mkdirSync(self.CHANGE_TASK_EXCEL_FILE.ABS_PATH)
-fs.mkdirSync(self.CHANGE_ZIP_FILE.ABS_PATH)
-fs.mkdirSync(self.IMAGE_FILE.ABS_PATH)
-fs.mkdirSync(self.IMAGE_CACHE_FILE.ABS_PATH)
+try {
+    fs.mkdirSync(self.CHANGE_EXCEL_FILE.ABS_PATH)
+    fs.mkdirSync(self.CHANGE_TASK_EXCEL_FILE.ABS_PATH)
+    fs.mkdirSync(self.CHANGE_ZIP_FILE.ABS_PATH)
+    fs.mkdirSync(self.IMAGE_FILE.ABS_PATH)
+    fs.mkdirSync(self.IMAGE_CACHE_FILE.ABS_PATH)
+} catch (error) {
+    // do nothing
+}
 
 module.exports = self;
