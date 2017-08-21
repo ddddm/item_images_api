@@ -3,9 +3,6 @@ var _ = require('lodash');
 var express = require('express');
 var router = express.Router();
 
-var multer = require('multer');
-var upload = multer({dest: './uploads/'});
-
 var excelParser = require('../services/excelParser');
 var zipEntriesParser = require('../services/zipEntriesParser');
 var changeService = require('../services/changeService');
@@ -15,7 +12,6 @@ var models = require('../models');
 
 router.route('/changes/check')
     .post(
-    upload.fields([{name: 'excel'}, {name: 'zip'}]),
     function (req, res) {
 
         if(_.isEmpty(req.files)) {
