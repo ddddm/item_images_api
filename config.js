@@ -2,6 +2,7 @@
 
 var self = {};
 var path = require('path');
+const fs = require('fs');
 
 self = {
     PORT: process.env.ITEMS_API_PORT || 8090,
@@ -29,5 +30,11 @@ self = {
     "storage": "database/database.sqlite",
     "logging": null
 };
+
+fs.mkdirSync(self.CHANGE_EXCEL_FILE.ABS_PATH)
+fs.mkdirSync(self.CHANGE_TASK_EXCEL_FILE.ABS_PATH)
+fs.mkdirSync(self.CHANGE_ZIP_FILE.ABS_PATH)
+fs.mkdirSync(self.IMAGE_FILE.ABS_PATH)
+fs.mkdirSync(self.IMAGE_CACHE_FILE.ABS_PATH)
 
 module.exports = self;
