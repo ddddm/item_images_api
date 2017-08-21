@@ -19,7 +19,6 @@ var logger = debug('vitekApi:createTask')
 
 router.route('/changes/task/')
     .post(
-    upload.fields([{name: 'excel'}]),
     function (req, res) {
 
         const files = req.files.excel;

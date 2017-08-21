@@ -8,9 +8,7 @@ const path = require('path');
 
 var express = require('express');
 var router = express.Router();
-var multer = require('multer');
 
-var upload = multer({dest: './uploads/'});
 var excelParser = require('../services/excelParser');
 
 var models = require('../models');
@@ -22,11 +20,8 @@ var imageService = require('../services/imageService');
 var imageExportTypes = require('../services/imageExportTypes');
 var filenameWithoutExtension = require('../services/filenameWithoutExtension');
 
-
-
 router.route('/export')
     .post(
-    upload.fields([{name: 'excel'}]),
     function(req, res) {
 
         var size = imageExportTypes['web'].size;
