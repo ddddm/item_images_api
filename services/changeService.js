@@ -72,5 +72,15 @@ module.exports = {
         else {
             return null;
         }
+    },
+    processItem: function processItem(item, image, zipEntries) {
+
+    },
+    getImageStream: function getImageStream(item, zipEntries) {
+        image.entry.stream(image.entry.name, function (err, stm) {
+            if(err) console.error('Error extracting stream for file: ' + image.entry.name);
+            zipEntriesParser.toDisk(item, stm);
+        });
+        
     }
 };
