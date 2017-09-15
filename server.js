@@ -41,6 +41,7 @@ app.use('/api/',
 app.use('/api/',
     require('./routes/export')
 );
+app.use('/api/', require('./routes/jobs'))
 app.use((error, req, res, next) => {
     if(error) {
         res.status(400).send(

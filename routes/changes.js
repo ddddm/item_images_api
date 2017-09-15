@@ -8,6 +8,7 @@ var zipEntriesParser = require('../services/zipEntriesParser');
 var changeService = require('../services/changeService');
 
 var models = require('../models');
+const queue = require('../queue');
 
 router.route('/changes')
     .post(
