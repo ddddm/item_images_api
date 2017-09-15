@@ -12,10 +12,9 @@ router.route('/jobs/:job_id').get(async function (req, res) {
     
         return res.json({
             status:'ok',
-            result: {
-                id: job.id,
+            result: Object.assign({
                 isCompleted,
-            }
+            }, job.data)
         });
     } catch (error) {
         res.status(404).json({
