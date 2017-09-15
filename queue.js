@@ -1,26 +1,29 @@
 const Queue = require('bull');
+const ChangeJob = require('./src/jobs/changeJob');
 
 class CreateChangeQueue {
     constructor() {
         this.queue = new Queue('change creation');
         this.queue.process(job => {
-            return new Promise(resolve => {
-                console.log('processed', job.id);
-                setTimeout(resolve, 2000);
-            })
+            const changeJob = new ChangeJob(job.data);
+            return changeJob.process()
         })
     }
 
-    add(items, zipEntries) {
+    add( { spreadsheetPath, archivePath} ) {
         return this.queue.add({
-            items,
-            zipEntries,
+            spreadsheetPath,
+            archivePath
         })
             .then(job => job.id);
     }
 
     get(jobId) {
         return this.queue.getJob(jobId)
+    }
+
+    empty() {
+        return this.queue.empty()
     }
 }
 

@@ -11,115 +11,125 @@ var models = require('../models');
 const queue = require('../queue');
 
 router.route('/changes')
-    .post(
-        function (req, res) {
+    .post( async (req, res) => {
+        if(_.isEmpty(req.files) || _.isEmpty(req.files.excel) || _.isEmpty(req.files.zip)) {
+            // handle situation where 1 or more files aint' attached to POST
+            return res.json({
+                status:'error',
+                message: 'Both zip and excel files must be attached to the request'
+            });
+        }
+        try {
+            const jobId = await queue.add({
+                spreadsheetPath: req.files.excel[0].path,
+                archivePath: req.files.zip[0].path,
+            })
 
-            if(_.isEmpty(req.files) || _.isEmpty(req.files.excel) || _.isEmpty(req.files.zip)) {
-                // handle situation where 1 or more files aint' attached to POST
-                return res.json(
-                    {
-                        status:'error',
-                        message: 'Both zip and excel files must be attached to the request'
+            return res.json({
+                status:'ok',
+                result: { jobId },
+            })
+        } catch (error) {
+            process.nextTick(function() { throw error; });
+            res.json({status: 'error'})
+        }
+
+        var unusedFiles = [],
+            unusedItems = [],
+            invalidItems = [],
+            validItems = [];
+
+        Promise.all([
+            excelParser.parse(req.files.excel[0].path),
+            zipEntriesParser.parse(req.files.zip[0].path)
+        ])
+            .spread(function (items, zipEntries) {
+                _.each(items, function processItem(item) {
+                    // Step 1: check this item is valid
+                    if(!item.valid) return invalidItems.push(item);
+
+                    // Step 2:
+                    // check this item has a corresponding
+                    // image file attached
+                    var image = changeService.findImage(item, zipEntries);
+
+                    if(!image) {
+                        return unusedItems.push(item);
                     }
-                );
-            }
 
-            var unusedFiles = [],
-                unusedItems = [],
-                invalidItems = [],
-                validItems = [];
+                    item.image_file = image.name;
 
-            Promise.all([
-                excelParser.parse(req.files.excel[0].path),
-                zipEntriesParser.parse(req.files.zip[0].path)
-            ])
-                .spread(function (items, zipEntries) {
-                    _.each(items, function processItem(item) {
-                        // Step 1: check this item is valid
-                        if(!item.valid) return invalidItems.push(item);
-
-                        // Step 2:
-                        // check this item has a corresponding
-                        // image file attached
-                        var image = changeService.findImage(item, zipEntries);
-
-                        if(!image) {
-                            return unusedItems.push(item);
-                        }
-
-                        item.image_file = image.name;
-
-                        // Step 3: write corresponding file to disk
-                        image.entry.stream(image.entry.name, function (err, stm) {
-                            if(err) console.error('Error extracting stream for file: ' + image.entry.name);
-                            zipEntriesParser.toDisk(item, stm);
-                        });
-
-                        // Step 4:
-                        // delete files from zip entries
-                        // to count unused images
-                        if(
-                            image.name !== 'no-picture.jpg' &&
-                            image.name !== 'no-image.jpg'
-                        ) {
-                            // we used this item
-                            delete zipEntries[image.name];
-                        }
-
-                        // store item for database insertion
-                        return validItems.push(item);
+                    // Step 3: write corresponding file to disk
+                    image.entry.stream(image.entry.name, function (err, stm) {
+                        if(err) console.error('Error extracting stream for file: ' + image.entry.name);
+                        zipEntriesParser.toDisk(item, stm);
                     });
 
-                    // do not need them any more
-                    delete zipEntries['no-picture.jpg'];
-                    delete zipEntries['no-image.jpg'];
+                    // Step 4:
+                    // delete files from zip entries
+                    // to count unused images
+                    if(
+                        image.name !== 'no-picture.jpg' &&
+                        image.name !== 'no-image.jpg'
+                    ) {
+                        // we used this item
+                        delete zipEntries[image.name];
+                    }
 
-                    // convert to array
-                    unusedFiles = _.values(zipEntries);
-                })
-                .then(function () {
-                    // create new Change
-                    return changeService.createFromItems(validItems);
-                })
-                .then(function (change) {
-                    return res.json(
-                        {
-                            status:'ok',
-                            changeId: change.get().id,
-                            stats: {
-                                unusedFiles: unusedFiles.length,
-                                unusedItems: unusedItems.length,
-                                invalidItems: invalidItems.length,
-                                validItems: validItems.length
-                            },
-                            result: {
-                                unusedFiles: {
-                                    total: unusedFiles.length,
-                                    files: _.map(unusedFiles, function(file) {
-                                        return file.name;
-                                    })
-                                },
-                                unusedItems: {
-                                    total: unusedItems.length,
-                                    items: _.map(unusedItems, function (item) {
-                                        return item.code + ', ' + item.image_file;
-                                    })
-                                },
-                                invalidItems: {
-                                    total: invalidItems.length,
-                                    items:  _.map(invalidItems, function (item) {
-                                        return item.code + ', ' + item.image_file;
-                                    })}
-                                //validItems: {total: validItems.length, items: validItems}
-                            }
-                            //https://jsbin.com/fesuduzavo/edit?html,js,console,output
-                        }
-                    );
-                })
-                .catch(function (error) {
-                    process.nextTick(function() { throw error; });
-                    res.json({status: 'error'})
+                    // store item for database insertion
+                    return validItems.push(item);
                 });
+
+                // do not need them any more
+                delete zipEntries['no-picture.jpg'];
+                delete zipEntries['no-image.jpg'];
+
+                // convert to array
+                unusedFiles = _.values(zipEntries);
+            })
+            .then(function () {
+                // create new Change
+                return changeService.createFromItems(validItems);
+            })
+            .then(function (change) {
+                return res.json(
+                    {
+                        status:'ok',
+                        changeId: change.get().id,
+                        stats: {
+                            unusedFiles: unusedFiles.length,
+                            unusedItems: unusedItems.length,
+                            invalidItems: invalidItems.length,
+                            validItems: validItems.length
+                        },
+                        result: {
+                            unusedFiles: {
+                                total: unusedFiles.length,
+                                files: _.map(unusedFiles, function(file) {
+                                    return file.name;
+                                })
+                            },
+                            unusedItems: {
+                                total: unusedItems.length,
+                                items: _.map(unusedItems, function (item) {
+                                    return item.code + ', ' + item.image_file;
+                                })
+                            },
+                            invalidItems: {
+                                total: invalidItems.length,
+                                items:  _.map(invalidItems, function (item) {
+                                    return item.code + ', ' + item.image_file;
+                                })}
+                            //validItems: {total: validItems.length, items: validItems}
+                        }
+                        //https://jsbin.com/fesuduzavo/edit?html,js,console,output
+                    }
+                );
+            })
+            .catch(function (error) {
+                process.nextTick(function() { throw error; });
+                res.json({status: 'error'})
+            });
         }
     )
      .get(function (req, res) {

@@ -6,18 +6,23 @@ const queue = require('../queue');
 
 router.route('/jobs/:job_id').get(async function (req, res) {
     const jobId = req.params.job_id;
-    const job = await queue.get(jobId);
-    const isCompleted = await job.isCompleted();
-
-    return res.json(
-        {
+    try {
+        const job = await queue.get(jobId);
+        const isCompleted = await job.isCompleted();
+    
+        return res.json({
             status:'ok',
             result: {
                 id: job.id,
                 isCompleted,
             }
-        }
-    );
+        });
+    } catch (error) {
+        res.status(404).json({
+            status: 'error',
+            message: 'Job does not exist',
+        })
+    }
 });
 
 
