@@ -37,7 +37,7 @@ router.route('/export')
         }
 
         Promise.all([
-            excelParser.parseAutodetectHeaders(req.files.excel[0].path),
+            excelParser.catalog(req.files.excel[0].path),
             imageService.cacheFolder(size)
         ]).
             spread(function (items) {

@@ -39,7 +39,7 @@ router.route('/changes/task/')
 
         Promise.all(
             files.map((file) => {
-                return excelParser.parseAutodetectHeaders(file.path)
+                return excelParser.catalog(file.path)
             })
         )
             .then( pricelists => {
