@@ -17,6 +17,14 @@ var models = require('../models');
 
 var logger = debug('vitekApi:createTask')
 
+router.route('/changes/test/')
+    .get(function( req, res) {
+        res.json({
+            status: 'ok',
+            message: 'test'
+        })
+    })
+
 router.route('/changes/task/')
     .post(
     function (req, res) {
