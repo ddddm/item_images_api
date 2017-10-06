@@ -41,6 +41,12 @@ app.use('/api/',
 app.use('/api/',
     require('./routes/export')
 );
+app.get('/api/deploy-test', function( req, res) {
+    res.json({
+        status: 'ok',
+        message: 'test'
+    })
+})
 app.use((error, req, res, next) => {
     if(error) {
         res.status(400).send(
