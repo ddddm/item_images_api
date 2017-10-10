@@ -3,10 +3,10 @@ var _ = require('lodash');
 var express = require('express');
 var router = express.Router();
 
+const config = require('../config');
 var excelParser = require('../services/excelParser');
 var zipEntriesParser = require('../services/zipEntriesParser');
 var changeService = require('../services/changeService');
-
 var models = require('../models');
 
 router.route('/changes')
@@ -43,7 +43,8 @@ router.route('/changes')
                         var image = changeService.findImage(item, zipEntries);
 
                         if(!image) {
-                            return unusedItems.push(item);
+                           item.image_file = config.PLACEHOLDER_IMAGE.NAME; 
+                           return;
                         }
 
                         item.image_file = image.name;
@@ -57,21 +58,11 @@ router.route('/changes')
                         // Step 4:
                         // delete files from zip entries
                         // to count unused images
-                        if(
-                            image.name !== 'no-picture.jpg' &&
-                            image.name !== 'no-image.jpg'
-                        ) {
-                            // we used this item
-                            delete zipEntries[image.name];
-                        }
+                        delete zipEntries[image.name];
 
                         // store item for database insertion
-                        return validItems.push(item);
+                        validItems.push(item);
                     });
-
-                    // do not need them any more
-                    delete zipEntries['no-picture.jpg'];
-                    delete zipEntries['no-image.jpg'];
 
                     // convert to array
                     unusedFiles = _.values(zipEntries);

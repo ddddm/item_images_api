@@ -4,11 +4,11 @@ var Promise = require('bluebird');
 var gm = require('gm');
 var path = require('path');
 var fs = Promise.promisifyAll(require('fs'));
-var config = require(__dirname + '/../config')
+const config = require(path.resolve(__dirname, '../config'));
 
 var cacheFolder = 'cache/';
 
-module.exports = {
+const self = {
     jpg: function (fileName, size) {
 
         var normalizedSizeObject = normalizeSizeObject(size);
@@ -16,6 +16,7 @@ module.exports = {
         var filePath;
 
         var shoudBeResized = !!(normalizedSizeObject.width || normalizedSizeObject.height);
+        const isPlaceholder = fileName === self.placeholderImage;
 
         // if should be resized:
         // 1. check cache size folder
@@ -34,7 +35,7 @@ module.exports = {
 
         // construct source filePath
         var sourcePath = path.join(
-            config.IMAGE_FILE.ABS_PATH,
+            isPlaceholder ? config.PLACEHOLDER_IMAGE : config.IMAGE_FILE.ABS_PATH,
             fileName
         );
 
@@ -134,3 +135,5 @@ function parseImageSize(size) {
         height: height
     }
 }
+
+module.exports = self;
