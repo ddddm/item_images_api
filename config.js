@@ -1,10 +1,8 @@
-'use strict';
-
-var self = {};
 var path = require('path');
 const fs = require('fs');
 
-self = {
+const placeHolderFileName = "no-picture.jpg";
+const self = {
     PORT: process.env.ITEMS_API_PORT || 8090,
     CHANGE_EXCEL_FILE: {
         LOCAL_PATH: 'excels',
@@ -25,6 +23,10 @@ self = {
     IMAGE_CACHE_FILE: {
         LOCAL_PATH: 'cache',
         ABS_PATH: path.join(__dirname, 'cache')
+    },
+    PLACEHOLDER_IMAGE: {
+        NAME: placeHolderFileName,
+        PATH: path.join(__dirname, placeHolderFileName),
     },
     "dialect": "sqlite",
     "storage": "database/database.sqlite",
