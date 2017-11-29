@@ -4,7 +4,8 @@
   "description": "Service for storing, matching and updating pictures for goods",
   "main": "index.js",
   "scripts": {
-    "test": "source $HOME/.nvm/nvm.sh; nvm use; node node_modules/mocha/bin/mocha './**/*.spec.js'"
+    "test": "source $HOME/.nvm/nvm.sh; nvm use; node node_modules/mocha/bin/mocha './**/*.spec.js'",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
