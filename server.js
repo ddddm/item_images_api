@@ -24,6 +24,9 @@ const upload = multer({
         }
     }
 });
+
+app.use('/excels', express.static('excels'));
+app.use('/images', express.static('images'));
 app.use(bodyParser.urlencoded({limit: '128mb', extended: true}));
 app.use(bodyParser.json({limit: '128mb'}));
 app.use(cors());
